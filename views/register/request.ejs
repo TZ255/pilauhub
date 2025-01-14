@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Yinka Enoch Adedokun">
+    <%- include('../0-global-partials/boostrapcss.ejs'); %>
+    <%- include('../0-global-partials/style.ejs'); %>
+    <%- include('./partials/style.ejs'); %>
+    <title>Register Page</title>
+</head>
+
+<body>
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <div class="login-form text-light h-auto rounded p-3">
+            <div class="titleform fs-3 text-center mb-5 fw-bold">Omba Kujisajili Pilau<span class="hubColor">Hub</span>
+            </div>
+            <%- include('../0-global-partials/messages.ejs'); %>
+            <div class="admin text-light">
+                Kuomba kujisajili <b>Pilau<span class="hubColor">Hub</span></b> Tafadhali wasiliana na admin wetu kwa moja ya
+                njia zifuatazo:
+                <div class="social ps-2 mt-3">
+                    <div class="tsap">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <b>Telegram: <a href="https://wa.me/+254769028387" class="hubColor">+254 769 028 387</a></b>
+                    </div>
+                    <div class="email">
+                        <i class="fa-regular fa-envelope"></i>
+                        <b>Email: <a href="mailto:pilauhub@gmail.com" class="hubColor">pilauhub@gmail.com</a></b>
+                    </div>
+                </div>
+            </div>
+            <div class="foot text-center mt-3">
+                <p class="mb-3 mt-5">Tayari una account? <a href="/login" class="hubColor">Login</a> hapa</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

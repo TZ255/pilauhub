@@ -11,7 +11,7 @@ module.exports = function (passport) {
                     // Check if user exists
                     const user = await userModel.findOne({ email: email });
                     if (!user) {
-                        return done(null, false, { message: 'No user found with that email' });
+                        return done(null, false, { message: `Email hii "${email}" haipo` });
                     }
                     // Check password (PLAIN TEXT FOR DEMO)
                     if (user.password !== password) {

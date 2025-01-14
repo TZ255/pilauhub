@@ -6,19 +6,27 @@ const isAuth = require('./functions/isAuth');
 
 // GET: Registration Page
 router.get('/register', (req, res) => {
-    if(req.isAuthenticated()) {
+    if (req.isAuthenticated()) {
         return res.redirect('/')
     }
     return res.render('register/register');
 });
 
+//request registering
+router.get('/request-register', (req, res) => {
+    if (req.isAuthenticated()) {
+        return res.redirect('/')
+    }
+    return res.render('register/request');
+});
+
 // POST: Handle Registration
 router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
     let errors = [];
 
-    if (!email || !password) {
-        errors.push({ msg: 'Please fill in all fields' });
+    if (!email || !password || !username) {
+        errors.push({ msg: 'Tafadhali jaza taarifa zako zote' });
     }
 
     if (errors.length > 0) {
@@ -28,19 +36,28 @@ router.post('/register', async (req, res) => {
     }
 
     try {
-        // Check if user already exists
-        const existingUser = await userModel.findOne({ email });
+        // Check if user already exists and registered
+        const existingUser = await userModel.findOne({ username });
         if (existingUser) {
-            req.flash('error_msg', 'Email already in use');
-            return res.redirect('/register');
+            //check if registerd
+            if (existingUser?.status == "registered") {
+                req.flash('error_msg', 'Username yako tayari imesajiliwa. Tafadhali login');
+                return res.redirect('/login');
+            }
+            if (existingUser?.status == "pending") {
+                // Update user with email and new password (PLAIN TEXT PASSWORD FOR DEMO ONLY!)
+                existingUser.email = email
+                existingUser.password = password
+                existingUser.status = 'registered'
+                await existingUser.save()
+
+                req.flash('success_msg', 'Umejisajili kikamilifu. Ingiza email na password yako kulogin');
+                return res.redirect('/login');
+            }
         }
-
-        // Create a new user (PLAIN TEXT PASSWORD FOR DEMO ONLY!)
-        const newUser = new userModel({ email, password, username: '123' })
-        await newUser.save();
-
-        req.flash('success_msg', 'You are now registered! Please log in.');
-        res.redirect('/login');
+        //if user not allowed
+        req.flash('error_msg', 'Umeingiza username isio sahihi au bado hujaruhusiwa kujisajili PilauHub');
+        return res.redirect('/register')
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'Something went wrong');
@@ -50,7 +67,7 @@ router.post('/register', async (req, res) => {
 
 // GET: Login Page
 router.get('/login', (req, res) => {
-    if(req.isAuthenticated()) {
+    if (req.isAuthenticated()) {
         return res.redirect('/')
     }
     return res.render('login/login');
@@ -59,7 +76,7 @@ router.get('/login', (req, res) => {
 // POST: Handle Login
 router.post('/login', (req, res, next) => {
     passport.authenticate('local', {
-        successRedirect: '/videos',
+        successRedirect: '/',
         failureRedirect: '/login',
         failureFlash: true, // This allows flash messages on failure
     })(req, res, next);

@@ -1,19 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Yinka Enoch Adedokun">
+  <%- include('../0-global-partials/boostrapcss.ejs'); %>
+  <%- include('../0-global-partials/style.ejs'); %>
+  <%- include('./partials/style.ejs'); %>
+  <title>Forgot Password Page</title>
 </head>
+
 <body>
-    <%- include("../0-global-partials/messages.ejs"); %>
-    <h1>Reset Password</h1>
-    <form action="/forgot-password" method="POST">
-      <label for="email">Email:</label>
-      <input type="email" name="email" required />
-      <br>
-      <button type="submit">Reset</button>
-    </form>
-    <p>Remembered your password. <a href="/login">Login</a></p>
-  </body>
+  <div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="login-form text-light h-auto rounded p-3">
+      <div class="titleform fs-3 text-center mb-5 fw-bold">Reset Pilau<span class="hubColor">Hub</span> Password</div>
+      <%- include('../0-global-partials/messages.ejs'); %>
+      <form action="/forgot-password" method="post">
+        <div class="mb-3">
+          <label for="username" class="form-label"><i class="fa-regular fa-envelope"></i>
+            Ingiza Email:</label>
+          <input type="email" class="form-control" name="email" required title="Ingiza Email sahihi"
+            placeholder="mfano: mbaruku@gmail.com">
+        </div>
+        <div class="text-center mt-4">
+          <button type="submit" class="btn bataniHub text-dark w-50">Reset</button>
+        </div>
+      </form>
+      <div class="foot text-center mt-3">
+        <p>Umekumbuka password yako? <a href="/login" class="hubColor">Login</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+
 </html>

@@ -9,7 +9,8 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes')
 const getRoutes = require('./routes/getRoutes')
 const resetRoutes = require('./routes/reset')
-const postRoutes = require('./routes/postRoutes')
+const postRoutes = require('./routes/postRoutes');
+const isAuth = require('./routes/functions/isAuth');
 
 const app = express();
 
@@ -23,6 +24,9 @@ mongoose.connect(process.env.MONGO_URI)
 
 // 2. Passport Config
 require('./config/passport')(passport);
+
+//static files
+app.use(express.static(__dirname + '/public'))
 
 // 3. EJS as our view engine
 app.set('view engine', 'ejs');
@@ -68,6 +72,9 @@ app.use((req, res, next) => {
   next();
 });
 
+//static protected files (thumbs, trailers, screenshots etc...)
+app.use('/private', isAuth, express.static(__dirname + '/private'));
+
 // 9. Routes
 app.use(authRoutes);
 app.use(getRoutes);
@@ -76,4 +83,4 @@ app.use(postRoutes);
 
 // 10. Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '127.0.0.1', () => console.log(`Server running on port ${PORT}`));

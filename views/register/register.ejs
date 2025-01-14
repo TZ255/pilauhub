@@ -1,22 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Yinka Enoch Adedokun">
+  <%- include('../0-global-partials/boostrapcss.ejs'); %>
+  <%- include('../0-global-partials/style.ejs'); %>
+  <%- include('./partials/style.ejs'); %>
+  <title>Register Page</title>
 </head>
+
 <body>
-    <%- include("../0-global-partials/messages.ejs"); %>
-    <h1>Register</h1>
-    <form action="/register" method="POST">
-      <label for="email">Email:</label>
-      <input type="email" name="email" required />
-      <br />
-      <label for="password">Password:</label>
-      <input type="password" name="password" required />
-      <br />
-      <button type="submit">Register</button>
-    </form>
-    <p>Already have an account? <a href="/login">Login</a></p>
-  </body>
+  <div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="login-form text-light h-auto rounded p-3">
+      <div class="titleform fs-3 text-center mb-5 fw-bold">Register to Pilau<span class="hubColor">Hub</span></div>
+      <%- include('../0-global-partials/messages.ejs'); %>
+      <form action="/register" method="post">
+        <div class="mb-3">
+          <label for="username" class="form-label fw-bold"><i class="fa-solid fa-user"></i> Username</label>
+          <input type="text" class="form-control" name="username" required placeholder="mfano: 347657933">
+          <div class="text-xs hubColor">Weka username uliyopewa na admin wetu</div>
+        </div>
+        <div class="mb-3">
+          <label for="username" class="form-label fw-bold"><i class="fa-regular fa-envelope"></i> Email</label>
+          <input type="email" class="form-control" name="email" required placeholder="mfano: mbaruku2@gmail.com">
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label fw-bold"><i class="fa-solid fa-key"></i> Password</label>
+          <input type="password" class="form-control" name="password" required>
+        </div>
+        <div class="text-center mt-4">
+          <button type="submit" class="btn bataniHub text-dark w-50"><i class="fa-solid fa-user"></i> Register</button>
+        </div>
+      </form>
+      <div class="foot text-center mt-3">
+        <p class="mb-5">Tayari una account? <a href="/login" class="hubColor">Login</a> hapa</p>
+        <p><a href="/request-register" class="hubColor">Umezuiwa kujisajili</a></p>
+      </div>
+    </div>
+  </div>
+</body>
 </html>

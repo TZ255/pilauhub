@@ -1,12 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <%- include('../0-global-partials/boostrapcss.ejs'); %>
+    <%- include('../0-global-partials/style.ejs'); %>
+    <%- include('./partials/style.ejs'); %>
+    <title>PilauHub User<%= user.username %></title>
 </head>
+
 <body>
-    <h3>Welcome <%= user.email %></h3>
-    <h5>To logout click <a href="/logout">Here</a></h5>
+    <%- include('../0-global-partials/nav.ejs'); %>
+    <div class="email text-xs text-dark-white mt-3 p-2">
+        <i class="fa-solid fa-o text-dark-white"></i>
+        Logged in as <span class="hubColor"><%= user.email %></span>
+    </div>
+    <section class="latest mt-5 p-2">
+        <h2 class="fs-5 fw-bold border-bottom border-dark-subtle">Latest Videos</h2>
+        <div class="thumbs">
+            <div class="card border border-0 my-3 mx-auto" style="width: 98%;">
+                <video id="myVideo" preload="none" controls>
+                    <source src="/private/trailers/mediabook_320p.mp4" type="video/mp4">
+                </video>
+                <div class="card-body bg-dark">
+                    <h5 class="card-title text-light">My Neighbour Wife Sweet</h5>
+                    <p class="card-text text-dark-white"><b>Jan 24, 2025</b> - John Sins, Jordi Polla & Kira Noir</p>
+                </div>
+            </div>
+            <div class="card border border-0 my-3 mx-auto" style="width: 98%;">
+                <img src="/trailers/mediabook_320p.mp4" class="card-img-top" alt="...">
+                <div class="card-body bg-dark">
+                    <h5 class="card-title text-light">My Neighbour Wife Sweet</h5>
+                    <p class="card-text text-dark-white"><b>Jan 24, 2025</b> - John Sins, Jordi Polla & Kira Noir</p>
+                </div>
+            </div>
+            <div class="card border border-0 my-3 mx-auto" style="width: 98%;">
+                <img src="/trailers/mediabook_320p.mp4" class="card-img-top" alt="...">
+                <div class="card-body bg-dark">
+                    <h5 class="card-title text-light">My Neighbour Wife Sweet</h5>
+                    <p class="card-text text-dark-white"><b>Jan 24, 2025</b> - John Sins, Jordi Polla & Kira Noir</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../0-global-partials/boostrapjs.ejs'); %>
 </body>
+
 </html>

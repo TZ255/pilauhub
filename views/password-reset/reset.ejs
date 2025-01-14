@@ -2,26 +2,39 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Yinka Enoch Adedokun">
+  <%- include('../0-global-partials/boostrapcss.ejs'); %>
+  <%- include('../0-global-partials/style.ejs'); %>
+  <%- include('./partials/style.ejs'); %>
+  <title>Verify OTP</title>
 </head>
 
 <body>
-    <%- include("../0-global-partials/messages.ejs"); %>
-    <h1>Verify OTP</h1>
-    <form action="/verify-otp" method="POST">
-        <label for="email">Your Email</label>
-        <input type="email" name="email">
-        <br>
-        <label for="newPassword">New Password</label>
-        <input type="password" name="newPassword" required>
-        <br>
-        <label for="otp">OTP:</label>
-        <input type="number" name="otp" required />
-        <br />
-        <button type="submit">Set new password</button>
-    </form>
+  <div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="login-form text-light h-auto rounded p-3">
+      <div class="titleform fs-3 text-center mb-5 fw-bold">Confirm <span class="hubColor">OTP</span></div>
+      <%- include('../0-global-partials/messages.ejs'); %>
+      <form action="/verify-otp" method="post">
+        <div class="mb-3">
+          <label for="email" class="form-label"><i class="fa-regular fa-envelope"></i> Email:</label>
+          <input type="email" class="form-control" name="email" required title="Ingiza Email sahihi" placeholder="mfano: mbaruku@gmail.com">
+        </div>
+        <div class="mb-3">
+          <label for="newPassword" class="form-label"><i class="fa-solid fa-lock"></i> Password Mpya:</label>
+          <input type="password" class="form-control" name="newPassword" required>
+        </div>
+        <div class="mb-3">
+            <label for="newPassword" class="form-label"><i class="fa-solid fa-key"></i> OTP:</label>
+            <input type="number" class="form-control" name="otp" required>
+            <div class="text-xs hubColor">Weka OTP uliyotumiwa kwenye email yako</div>
+          </div>
+        <div class="text-center my-4">
+          <button type="submit" class="btn bataniHub text-dark w-50">Thibitisha</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
-
 </html>

@@ -1,0 +1,52 @@
+<style>
+    :root {
+        --primary-bg: #1a1a1a;
+        --primary-text: #f8f9fa;
+        --secondary-bg: #2e2e2e;
+        --secondary-text: #c6c6c6;
+        --accent: #ff9900;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    html {
+        background-color: var(--primary-bg);
+        color: var(--primary-text);
+    }
+
+    body {
+        background-color: var(--primary-bg);
+        margin: 0 auto;
+        max-width: 480px;
+    }
+
+    .bataniHub {
+        font-weight: bold;
+        padding: 6px 12px;
+        font-size: 18px;
+        border-radius: 4px;
+        background-color: var(--accent);
+    }
+
+    .text-dark-white {
+        color: var(--secondary-text);
+    }
+
+    .bataniHub:hover, .bataniHub:active {
+        background-color: var(--secondary-bg);
+        border: var(--accent) 2px solid;
+        color: var(--accent) !important;
+    }
+
+    .text-xs {
+        font-size: small !important;
+    }
+
+    .hubColor {
+        color: var(--accent);
+    }
+</style>

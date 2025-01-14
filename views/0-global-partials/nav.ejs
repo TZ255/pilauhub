@@ -1,0 +1,28 @@
+<nav class="navbar sticky-top navbar-expand bg-body-tertiary" data-bs-theme="dark">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="/">PILAU<span class="hubColor">Hub</span></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse ms-3" id="navbarNav">
+        <ul class="navbar-nav d-flex justify-content-between align-items-center w-100">
+          <li class="nav-item">
+            <a class="nav-link text-xs" aria-current="page" href="/"><i class="fa-solid fa-house"></i></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-xs" href="/my-account"><i class="fa-solid fa-user"></i></a>
+          </li>
+          <li class="nav-item text-center">
+            <a class="nav-link text-xs" href="/add-points">
+                <i class="fa-solid fa-coins"></i> <br> <%= user.points %>
+            </a>
+          </li>
+          <li class="nav-item text-center">
+            <a class="nav-link text-xs" href="/logout">
+                <i class="fa-solid fa-power-off"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>

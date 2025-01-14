@@ -54,10 +54,15 @@ router.post('/forgot-password', async (req, res) => {
             html: `<p>Your OTP code to reset password is: <b>${OTP}</b>.</p><p>The code is valid for 15 minutes</p>`
         };
 
-        await transporter.sendMail(mailOptions);
-
-        req.flash('success_msg', 'OTP sent to your email. Please check and verify within 15 minutes.');
-        res.redirect('/verify-otp');
+        transporter.sendMail(mailOptions)
+            .then((mail) => {
+                console.log(mail)
+                req.flash('success_msg', 'OTP imetumwa. Angalia Email yako');
+                res.redirect('/verify-otp');
+            })
+            .catch((err) => {
+                throw err;
+            })
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'Something went wrong');
@@ -82,13 +87,13 @@ router.post('/verify-otp', async (req, res) => {
         // 1. Find user by email
         const user = await userModel.findOne({ email });
         if (!user) {
-            req.flash('error_msg', `The Email ${email} was not found. Enter correct email`);
+            req.flash('error_msg', `Email hii "${email}" haipo. Ingiza Email sahihi`);
             return res.redirect('/verify-otp');
         }
 
         // 2. Check if OTP is valid
         if (user.resetOTP !== otp) {
-            req.flash('error_msg', 'Invalid OTP. Enter correct OTP');
+            req.flash('error_msg', 'Umeingiza OTP isiyo sahihi. Ingiza OTP sahihi');
             return res.redirect('/verify-otp');
         }
 
@@ -104,7 +109,7 @@ router.post('/verify-otp', async (req, res) => {
         user.resetOTP = '';
         user.otpExpires = null;
         await user.save()
-        req.flash('success_msg', 'Password was changed successfully. Now login')
+        req.flash('success_msg', 'Password imebadilishwa kikamilifu. Login kuendelea')
         return res.redirect('/login');
     } catch (err) {
         console.error(err);

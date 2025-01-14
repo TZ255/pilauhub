@@ -1,11 +1,11 @@
-<% if (success_msg) { %>
-    <div style="color: green;"><%= success_msg %></div>
-  <% } %>
-  
-  <% if (error_msg) { %>
-    <div style="color: red;"><%= error_msg %></div>
-  <% } %>
-  
-  <% if (error) { %>
-    <div style="color: red;"><%= error %></div>
-  <% } %>
+<% if (success_msg && success_msg.length > 0) { %>
+<div class="p-2 text-xs alert alert-success" role="alert"><%= success_msg %></div>
+<% } %>
+
+<% if (error_msg && error_msg.length > 0) { %>
+<div class="p-2 text-xs alert alert-danger" role="alert"><%= error_msg %></div>
+<% } %>
+
+<% if (error && error.length > 0) { %>
+<div class="p-2 text-xs alert alert-danger" role="alert"><%= error %></div>
+<% } %>
