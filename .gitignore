@@ -1,3 +1,6 @@
 node_modules/
 .env
 ecosystem.config.js
+public/
+private/
+storage/
