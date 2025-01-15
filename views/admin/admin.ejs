@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../0-global-partials/boostrapcss.ejs'); %>
+    <%- include('../0-global-partials/style.ejs'); %>
+    <%- include('./partials/style.ejs'); %>
+    <title>PilauHub Admin <%= user.username %></title>
+</head>
+
+<body>
+    <%- include('../0-global-partials/nav.ejs'); %>
+    <div class="email text-xs text-dark-white mt-3 p-2">
+        <i class="fa-solid fa-o text-dark-white"></i>
+        Logged in as <span class="hubColor"><%= user.email %></span>
+    </div>
+    <section class="latest mt-5 p-2">
+        <h2 class="fs-5 fw-bold text-light border-bottom border-dark-subtle">Posting Videos</h2>
+        <div id="status" class="resulting"></div>
+        <div id="resulting" class="resulting"></div>
+        <div class="posting p-2">
+            <form id="videoform" action="/post/video" method="post">
+                <div class="mb-3">
+                    <label for="date" class="form-label"><i class="fa-solid fa-calendar-days"></i> Date</label>
+                    <input id="date" type="date" class="form-control" name="date" required>
+                </div>
+                <div class="mb-3">
+                    <label for="video" class="form-label"><i class="fa-solid fa-video"></i> Video</label>
+                    <input id="video" type="text" class="form-control" name="video" required>
+                </div>
+                <div class="mb-3">
+                    <label for="caption" class="form-label"><i class="fa-regular fa-comment"></i> Caption</label>
+                    <input id="caption" type="text" class="form-control" name="caption" required>
+                </div>
+                <div class="mb-3">
+                    <label for="trailer" class="form-label"><i class="fa-solid fa-image"></i> Trailer</label>
+                    <input id="trailer" type="text" class="form-control" name="trailer" required title="Trailer URL"
+                        placeholder="https://....">
+                </div>
+                <div class="mb-3">
+                    <label for="brand" class="form-label"><i class="fa-regular fa-copyright"></i> Brand</label>
+                    <select name="brand" id="brand" class="form-control" required>
+                        <option value="#RealityKings">Reality Kings</option>
+                        <option value="#RealityKings #Lesbian">Reality Kings Lesbian</option>
+                        <option value="#BangBros">BangBros</option>
+                        <option value="#Brazzers">Brazzers</option>
+                        <option value="#Brazzers #Lesbian">Brazzers Lesbian</option>
+                        <option value="#DigitalPlayground">Digital Playground</option>
+                        <option value="#TransAngels #Shemale">Transangels</option>
+                        <option value="#Hentaied">Hentaied</option>
+                    </select>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn bataniHub text-dark w-50">
+                        POST
+                        <i class="fa-regular fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('videoform');
+            const videoInput = document.getElementById('video');
+            const trailerInput = document.getElementById('trailer');
+            const captionInput = document.getElementById('caption')
+            const brandInput = document.getElementById('brand')
+            const dateInput = document.getElementById('date')
+            const resultsDiv = document.getElementById('resulting');
+            const statusDiv = document.getElementById('status');
+
+            // Initialize Socket.IO connection to '/receive/socket' namespace
+            const socket = io('/receive/videodata');
+
+            // Connection opened
+            socket.on('connect', () => {
+                statusDiv.textContent = 'Socket Connected';
+                statusDiv.style.color = 'green';
+            });
+
+            // Listen for 'result' events
+            socket.on('result', (data) => {
+                resultsDiv.textContent = `Result: ${data}`
+            });
+
+            // Listen for 'finalMessage' events
+            socket.on('finalMessage', (message) => {
+                const p = document.createElement('p');
+                p.textContent = message;
+                p.style.fontWeight = 'bold';
+                resultsDiv.appendChild(p);
+                resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            });
+
+            // Listen for 'errorMessage' events
+            socket.on('errorMessage', (error) => {
+                const p = document.createElement('p');
+                p.textContent = `Error: ${error}`;
+                p.style.color = 'red';
+                resultsDiv.appendChild(p);
+                resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            });
+
+            // Handle errors
+            socket.on('connect_error', (error) => {
+                statusDiv.textContent = 'Connection Error';
+                statusDiv.style.color = 'red';
+                console.error('Connection Error:', error);
+            });
+
+            // Handle disconnection
+            socket.on('disconnect', () => {
+                statusDiv.textContent = 'Disconnected';
+                statusDiv.style.color = 'gray';
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const data = {
+                    trailer: trailerInput.value.trim(),
+                    video: videoInput.value.trim(),
+                    caption: captionInput.value.trim(),
+                    brand: brandInput.value.trim(),
+                    date: new Date(dateInput.value).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    })
+                }
+
+                if (!trailer || !video || !caption || !date || !brand) {
+                    alert('Some of values are null');
+                    return;
+                }
+
+                // Send the number to the server via Socket.IO
+                socket.emit('videoInput', data);
+            });
+        });
+    </script>
+    <%- include('../0-global-partials/boostrapjs.ejs'); %>
+</body>
+
+</html>

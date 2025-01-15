@@ -11,6 +11,9 @@ const getRoutes = require('./routes/getRoutes')
 const resetRoutes = require('./routes/reset')
 const postRoutes = require('./routes/postRoutes');
 const isAuth = require('./routes/functions/isAuth');
+const http = require('http');
+const socketIO = require('socket.io');
+const videoDataSocket = require('./routes/sockets/videodata');
 
 const app = express();
 
@@ -82,5 +85,26 @@ app.use(resetRoutes);
 app.use(postRoutes);
 
 // 10. Start the server
+const server = http.createServer(app)
+const io = socketIO(server)
+
+// Handle Socket.IO connections on '/receive/socket' namespace
+const receiveSocket = io.of('/receive/videodata');
+
+receiveSocket.on('connection', (socket) => {
+  console.log('New Socket.IO connection established on /receive/videodata');
+
+  //sockets goes here
+  videoDataSocket(socket)
+
+  socket.on('disconnect', () => {
+    console.log('Socket.IO connection closed');
+  });
+
+  socket.on('error', (error) => {
+    console.error(`Socket.IO error: ${error}`);
+  });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '127.0.0.1', () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, '127.0.0.1', () => console.log(`Server running on port ${PORT}`));
