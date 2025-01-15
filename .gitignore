@@ -4,5 +4,3 @@ ecosystem.config.js
 public/
 private/
 storage/
-package.json
-package-lock.json
