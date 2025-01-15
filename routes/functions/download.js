@@ -30,8 +30,8 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
         await socket.emit('result', `${typeVideo} is starting downloading`)
 
         //because public folder is in root and we are in subdirectory, we go back with '..'
-        let trailer_path = path.join(__dirname, '..', '..', 'private', `${trailer_name_with_ext}`)
-        let thumb_path = path.join(__dirname, '..', '..', 'private', `${thumb_name}.jpg`)
+        let trailer_path = path.join(__dirname, '..', '..', 'private', 'trailers', `${trailer_name_with_ext}`)
+        let thumb_path = path.join(__dirname, '..', '..', 'private', 'thumbs', `${thumb_name}.jpg`)
 
         //video dimensions... will be modifided by ffmpeg
         let v_width = 568
@@ -79,7 +79,7 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
                     .on('error', reject)
                     .screenshots({
                         timestamps: ['50%'],
-                        filename: `${trailer_path.split('.')[0]}.jpg`,
+                        filename: `${trailer_path.split('.')[0]}.jpg`, //remove trailer path ext
                         folder: path.dirname(thumb_path),
                         size: '568x320'
                     });
@@ -111,7 +111,7 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
 
             // Upload the video to Telegram
             await socket.emit('result', 'Starting Uploading Trailer to Telegram...')
-            await bot.api.sendVideo(1473393723, InputFile(video_path), {
+            await bot.api.sendVideo(1473393723, new InputFile(video_path), {
                 thumbnail: new InputFile(thumb_path),
                 duration: duration,
                 supports_streaming: true,
@@ -218,7 +218,7 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
 
             // Upload the video to Telegram
             await socket.emit('result', 'Starting Uploading to Telegram...')
-            await bot.api.sendVideo(1473393723, InputFile(video_path), {
+            await bot.api.sendVideo(1473393723, new InputFile(video_path), {
                 thumbnail: new InputFile(temp_tg_thumb_path),
                 duration: duration,
                 supports_streaming: true,
