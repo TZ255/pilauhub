@@ -80,10 +80,9 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
                     .screenshots({
                         timestamps: ['50%'],
                         filename: `${trailer_path.split('.')[0]}.jpg`, //remove trailer path ext
-                        folder: path.dirname(thumb_path),
-                        size: '568x320'
+                        folder: path.dirname(thumb_path)
                     });
-            })
+            }).catch(e => console.log(e))
 
             let duration = await new Promise((resolve, reject) => {
                 ffmpeg.ffprobe(trailer_path, (err, metadata) => {
@@ -225,7 +224,7 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
                 width: v_width, height: v_height
             })
             await socket.emit('result', '✅ Finish uploading to Telegram')
-            fs.unlinkSync(temp_tg_thumb_path); // delete telegram thumb
+            //fs.unlinkSync(temp_tg_thumb_path); // delete telegram thumb
         });
 
         writer.on('error', err => {
