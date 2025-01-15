@@ -81,7 +81,7 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
                         timestamps: ['50%'],
                         filename: `${trailer_path.split('.')[0]}.jpg`, //remove trailer path ext
                         folder: path.dirname(thumb_path),
-                        size: '320X180'
+                        size: '320x180'
                     });
             }).catch(e => console.log(e))
 
