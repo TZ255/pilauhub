@@ -1,258 +1,191 @@
-const axios = require('axios').default
-const fs = require('fs')
-const path = require('path')
+const axios = require('axios').default;
+const fs = require('fs').promises;
+const path = require('path');
 const https = require('https');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static');
-const { Bot, InputFile } = require('grammy')
+const { Bot, InputFile } = require('grammy');
 const { exec } = require('child_process');
+const { promisify } = require('util');
 
-const execPromise = (command) => {
+// Promisify exec for better async/await handling
+const execPromise = promisify(exec);
+
+// Set ffmpeg path
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+// Initialize Telegram Bot
+const bot = new Bot(process.env.BOT_TOKEN, {
+    client: { apiRoot: process.env.API_ROOT }
+});
+
+// Helper function to download a file with progress tracking
+const downloadFile = async (url, destPath, socket, type) => {
+    const response = await axios.get(url, {
+        responseType: 'stream',
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }) // Consider the security implications
+    });
+
+    const totalSize = parseInt(response.headers['content-length'], 10);
+    let downloadedSize = 0;
+    let lastLogTime = Date.now();
+
+    const writer = response.data.pipe(require('fs').createWriteStream(destPath));
+
+    response.data.on('data', (chunk) => {
+        downloadedSize += chunk.length;
+        const now = Date.now();
+        if (now - lastLogTime >= 1000) { // Emit every second
+            const progress = ((downloadedSize / totalSize) * 100).toFixed(1);
+            const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(2);
+            const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+            socket.emit('result', `${type} Downloaded: ${downloadedMB}MB of ${totalMB}MB (${progress}%)`);
+            lastLogTime = now;
+        }
+    });
+
     return new Promise((resolve, reject) => {
-        exec(command, (err, stdout, stderr) => {
-            if (err) {
-                reject(stderr || err.message);
-            } else {
-                resolve(stdout);
-            }
+        writer.on('finish', () => {
+            socket.emit('result', `${type} Download Finished`);
+            resolve();
+        });
+        writer.on('error', (err) => {
+            reject(new Error(`Failed writing the ${type.toLowerCase()} file: ${err.message}`));
         });
     });
 };
 
-const bot = new Bot(process.env.BOT_TOKEN, {
-    client: { apiRoot: process.env.API_ROOT }
-})
+// Helper function to generate thumbnails
+const generateThumbnail = (videoPath, thumbPath, size = '320x180') => {
+    return new Promise((resolve, reject) => {
+        ffmpeg(videoPath)
+            .screenshots({
+                timestamps: ['50%'],
+                filename: path.basename(thumbPath),
+                folder: path.dirname(thumbPath),
+                size
+            })
+            .on('end', resolve)
+            .on('error', reject);
+    });
+};
 
-//uploading trailer and generate post thumb
-const uploadingTrailer = async (socket, durl, trailer_name, thumb_name, typeVideo) => {
+// Helper function to get video metadata
+const getVideoMetadata = (videoPath) => {
+    return new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(videoPath, (err, metadata) => {
+            if (err) return reject(err);
+            const videoStream = metadata.streams.find(stream => stream.codec_type === 'video');
+            if (!videoStream) return reject(new Error('No video stream found'));
+            resolve({
+                duration: metadata.format.duration,
+                width: videoStream.width,
+                height: videoStream.height,
+                minutes: Math.floor(metadata.format.duration / 60),
+                size: Math.floor(metadata?.format?.size / (1024 * 1024)) // Convert bytes to MB
+            });
+        });
+    });
+};
+
+// Helper function to upload video to Telegram
+const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption) => {
+    await bot.api.sendVideo(chatId, new InputFile(videoPath), {
+        thumbnail: new InputFile(thumbPath),
+        parse_mode: 'HTML',
+        caption,
+        duration: metadata.duration,
+        supports_streaming: true,
+        width: metadata.width,
+        height: metadata.height
+    });
+};
+
+// Generic upload function
+const uploadVideoToServerAndTelegram = async ({ 
+    socket, 
+    url, 
+    videoName, 
+    caption,
+    type, 
+    paths, 
+    thumbnailSize 
+}) => {
     try {
-        //starting
-        await socket.emit('result', `${typeVideo} is starting downloading`)
+        socket.emit('result', `${type} is starting downloading`);
 
-        //because public folder is in root and we are in subdirectory, we go back with '..'
-        let trailer_path = path.join(__dirname, '..', '..', 'private', 'trailers', `${trailer_name}.mkv`)
-        let tg_fpth = path.join(__dirname, '..', '..', 'private', 'trailers', `tg_${trailer_name}.jpeg`)
+        // Define paths
+        const videoPath = paths.videoPath;
+        const thumbPath = paths.thumbPath;
 
-        //video dimensions... will be modifided by ffmpeg
-        let v_width = 320
-        let v_height = 180
+        // Download the video file
+        await downloadFile(url, videoPath, socket, type);
 
-        let response = await axios.get(durl, {
-            responseType: 'stream',
-            httpsAgent: new https.Agent({ rejectUnauthorized: false })
-        })
+        // Generate thumbnails
+        await generateThumbnail(videoPath, thumbPath, thumbnailSize);
 
-        // Get total file size
-        const totalSize = parseInt(response.headers['content-length'], 10);
-        let downloadedSize = 0;
-        let lastLogTime = Date.now();
+        // Get video metadata
+        const metadata = await getVideoMetadata(videoPath);
 
-        //save file locally
-        const writer = fs.createWriteStream(trailer_path)
+        socket.emit('result', 'Starting Uploading to Telegram...');
 
-        // Add progress tracking
-        response.data.on('data', (chunk) => {
-            downloadedSize += chunk.length;
+        // Upload to Telegram
+        await uploadToTelegram(process.env.TELEGRAM_CHAT_ID, videoPath, thumbPath, metadata, caption);
 
-            // Emit progress every second
-            const now = Date.now();
-            if (now - lastLogTime >= 1000) {
-                const progress = (downloadedSize / totalSize) * 100;
-                const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(2);
-                const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-                socket.emit('result', `Trailer Downloaded: ${downloadedMB}MB of ${totalMB}MB (${progress.toFixed(1)}%)`);
-                lastLogTime = now;
-            }
-        })
+        // Cleanup thumbnails
+        await fs.unlink(thumbPath);
 
-        //pipe the file
-        response.data.pipe(writer);
+        socket.emit('result', `✅ Finish uploading ${type} to Telegram`);
 
-        writer.on('finish', async () => {
-            let finish = 'Trailer Download Finished'
-            await socket.emit('result', finish)
-
-            // Generate the thumbnail
-            await new Promise((resolve, reject) => {
-                ffmpeg(trailer_path)
-                    .on('end', resolve)
-                    .on('error', reject)
-                    .screenshots({
-                        timestamps: ['50%'],
-                        filename: `tg_${thumb_name}.jpeg`,
-                        folder: path.dirname(tg_fpth),
-                        size: '320x180'
-                    });
-            }).catch(e => console.log(e))
-
-            let duration = await new Promise((resolve, reject) => {
-                ffmpeg.ffprobe(trailer_path, (err, metadata) => {
-                    if (err) { return reject(err) }
-                    let dur = metadata.format.duration
-                    resolve(dur)
-                })
-            })
-
-            let dimensions = await new Promise((resolve, reject) => {
-                ffmpeg.ffprobe(trailer_path, (err, metadata) => {
-                    if (err) { reject(err) } else {
-                        let vid = metadata.streams.find(stream => stream?.codec_type == 'video')
-                        if (vid) {
-                            v_width = vid.width
-                            v_height = vid.height
-                            resolve(vid)
-                        } else {
-                            socket.emit('errorMessage', 'The file has no video stream... height and width of video will be sent with default values ie 320x180')
-                            resolve({ width: 320, height: 180 })
-                        }
-                    }
-                })
-            })
-
-            // Upload the video to Telegram
-            await socket.emit('result', 'Starting Uploading Trailer to Telegram...')
-            await bot.api.sendVideo(1473393723, new InputFile(trailer_path), {
-                thumbnail: new InputFile(tg_fpth),
-                duration: duration,
-                supports_streaming: true,
-                width: v_width, height: v_height
-            })
-            fs.unlinkSync(tg_fpth) //unlink tg thumb
-            await socket.emit('result', '✅ Finish uploading Trailer to Telegram')
-        });
-
-        writer.on('error', err => {
-            socket.emit('errorMessage', 'Failed uploading to Telegram...')
-            console.error('Error writing the video:', err);
-        });
+        //get the metadata to be used on the trailer caption
+        return {metadata: metadata}
     } catch (error) {
-        socket.emit('errorMessage', error.message)
-        console.log(error.message, error)
+        socket.emit('errorMessage', error.message);
+        console.error(`Error in uploading ${type}:`, error);
     }
-}
+};
 
-//uploading video
-const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
-    try {
-        //starting
-        await socket.emit('result', `${typeVideo} is starting downloading`)
+// Specific function for uploading regular videos
+const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) => {
+    const videoPath = path.resolve(__dirname, '..', '..', 'storage', `${videoName}.mkv`);
+    const thumbPath = path.resolve(__dirname, '..', '..', 'storage', `tele_${videoName}.jpeg`);
 
-        //because public folder is in root and we are in subdirectory, we go back with '..'
-        let video_path = path.join(__dirname, '..', '..', 'storage', `${video_name}.mkv`)
-        let tg_path = path.join(__dirname, '..', '..', 'storage', `tele_${video_name}.jpeg`)
-        let video_thumb = path.join(__dirname, '..', '..', 'private', 'thumbs', `${video_name}.jpg`)
+    const uploaded = await uploadVideoToServerAndTelegram({
+        socket,
+        url: durl,
+        videoName: videoName,
+        caption: fileCaption,
+        type: typeVideo,
+        paths: {
+            videoPath,
+            thumbPath
+        },
+        thumbnailSize: '568x320'
+    });
+    return {metadata: uploaded.metadata}
+};
 
-        //video dimensions... will be modifided by ffmpeg
-        let v_width = 320
-        let v_height = 180
 
-        let response = await axios.get(durl, {
-            responseType: 'stream',
-            httpsAgent: new https.Agent({ rejectUnauthorized: false })
-        })
+// Specific function for uploading trailers (start with full video then trailer to get full video metadata)
+const uploadingTrailer = async (socket, durl, trailerName, typeVideo, trailerCaption) => {
+    const trailerPath = path.resolve(__dirname, '..', '..', 'private', 'trailers', `${trailerName}.mkv`);
+    const thumbPath = path.resolve(__dirname, '..', '..', 'private', 'trailers', `tg_${trailerName}.jpeg`);
 
-        // Get total file size
-        const totalSize = parseInt(response.headers['content-length'], 10);
-        let downloadedSize = 0;
-        let lastLogTime = Date.now();
-
-        //save file locally
-        const writer = fs.createWriteStream(video_path)
-
-        // Add progress tracking
-        response.data.on('data', (chunk) => {
-            downloadedSize += chunk.length;
-
-            // Emit progress every second
-            const now = Date.now();
-            if (now - lastLogTime >= 1000) {
-                const progress = (downloadedSize / totalSize) * 100;
-                const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(2);
-                const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-                socket.emit('result', `Video Downloaded: ${downloadedMB}MB of ${totalMB}MB (${progress.toFixed(1)}%)`);
-                lastLogTime = now;
-            }
-        })
-
-        //pipe the file
-        response.data.pipe(writer);
-
-        writer.on('finish', async () => {
-            let finish = 'Video File Download Finished'
-            await socket.emit('result', finish)
-
-            // Generate the thumbnail for the project
-            await new Promise((resolve, reject) => {
-                ffmpeg(video_path)
-                    .on('end', resolve)
-                    .on('error', reject)
-                    .screenshots({
-                        timestamps: ['50%'],
-                        filename: `${video_name}.jpg`,
-                        folder: path.dirname(video_thumb),
-                        size: '568x320'
-                    });
-            })
-
-            // Generate the thumbnail for telegram
-            await new Promise((resolve, reject) => {
-                ffmpeg(video_path)
-                    .on('end', resolve)
-                    .on('error', reject)
-                    .screenshots({
-                        timestamps: ['50%'],
-                        filename: `tele_${video_name}.jpeg`,
-                        folder: path.dirname(tg_path),
-                        size: '568x320'
-                    });
-            })
-
-            let duration = await new Promise((resolve, reject) => {
-                ffmpeg.ffprobe(video_path, (err, metadata) => {
-                    if (err) { return reject(err) }
-                    let dur = metadata.format.duration
-                    resolve(dur)
-                })
-            })
-
-            let dimensions = await new Promise((resolve, reject) => {
-                ffmpeg.ffprobe(video_path, (err, metadata) => {
-                    if (err) { reject(err) } else {
-                        let vid = metadata.streams.find(stream => stream?.codec_type == 'video')
-                        if (vid) {
-                            v_width = vid.width
-                            v_height = vid.height
-                            resolve(vid)
-                        } else {
-                            socket.emit('errorMessage', 'The file has no video stream... height and width of video will be sent with default values ie 320x180')
-                            resolve({ width: 320, height: 180 })
-                        }
-                    }
-                })
-            })
-
-            // Upload the video to Telegram
-            await socket.emit('result', 'Starting Uploading to Telegram...')
-            await bot.api.sendVideo(1473393723, new InputFile(video_path), {
-                thumbnail: new InputFile(tg_path),
-                duration: duration,
-                supports_streaming: true,
-                width: v_width, height: v_height
-            })
-            fs.unlinkSync(tg_path) //delete tg thumb
-            await socket.emit('result', '✅ Finish uploading to Telegram')
-        });
-
-        writer.on('error', err => {
-            socket.emit('errorMessage', 'Error uploading to Telegram: '+err.message)
-            console.error('Error writing the video:', err);
-        });
-    } catch (error) {
-        socket.emit('errorMessage', error.message)
-        console.log(error.message, error)
-    }
-}
+    await uploadVideoToServerAndTelegram({
+        socket,
+        url: durl,
+        videoName: trailerName,
+        caption: trailerCaption,
+        type: typeVideo,
+        paths: {
+            videoPath: trailerPath,
+            thumbPath
+        },
+        thumbnailSize: '320x180'
+    });
+};
 
 module.exports = {
-    uploadingTrailer, uploadingVideos
-}
+    uploadingTrailer,
+    uploadingVideos
+};

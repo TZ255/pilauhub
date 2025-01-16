@@ -30,14 +30,14 @@
                     <label for="video" class="form-label"><i class="fa-solid fa-video"></i> Video</label>
                     <input id="video" type="text" class="form-control" name="video" required>
                 </div>
-                <div class="mb-3 d-flex">
+                <div class="mb-3 d-flex justify-content-between">
                     <div class="title" style="width: 48%;">
                         <label for="caption" class="form-label"><i class="fa-regular fa-comment"></i> Caption</label>
                         <input id="caption" type="text" class="form-control" name="caption" required>
                     </div>
                     <div class="casts" style="width: 48;">
-                        <label for="caption" class="form-label"><i class="fa-regular fa-comment"></i> Casts</label>
-                        <input id="caption" type="text" class="form-control" name="caption" required>
+                        <label for="cast" class="form-label"><i class="fa-regular fa-comment"></i> Casts</label>
+                        <input id="cast" type="text" class="form-control" name="cast" required>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -66,6 +66,12 @@
                 </div>
             </form>
         </div>
+        <div class="vsession p-3">
+            <h3 class="fs-5 border-bottom border-dark-subtle">Videos Uploaded in this Session</h3>
+            <ul id="list-uploaded">
+
+            </ul>
+        </div>
     </section>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -75,10 +81,12 @@
             const videoInput = document.getElementById('video');
             const trailerInput = document.getElementById('trailer');
             const captionInput = document.getElementById('caption')
+            const castInput = document.getElementById('cast')
             const brandInput = document.getElementById('brand')
             const dateInput = document.getElementById('date')
             const resultsDiv = document.getElementById('resulting');
             const statusDiv = document.getElementById('status');
+            const listsFinished = document.getElementById('list-uploaded')
 
             // Initialize Socket.IO connection to '/receive/socket' namespace
             const socket = io('/receive/videodata');
@@ -96,11 +104,14 @@
 
             // Listen for 'finalMessage' events
             socket.on('finalMessage', (message) => {
-                const p = document.createElement('p');
-                p.textContent = message;
-                p.style.fontWeight = 'bold';
-                resultsDiv.appendChild(p);
-                resultsDiv.scrollTop = resultsDiv.scrollHeight;
+                statusDiv.textContent = message
+                resultsDiv.textContent = ''
+
+                //show finished
+                let li = document.createElement('li')
+                li.style.color = 'green'
+                li.textContent = message
+                listsFinished.appendChild(li)
             });
 
             // Listen for 'errorMessage' events
@@ -132,6 +143,7 @@
                     trailer: trailerInput.value.trim(),
                     video: videoInput.value.trim(),
                     caption: captionInput.value.trim(),
+                    cast: castInput.value.trim(),
                     brand: brandInput.value.trim(),
                     html_date: dateInput.value,
                     date: new Date(dateInput.value).toLocaleDateString('en-US', {
@@ -141,7 +153,7 @@
                     })
                 }
 
-                if (!trailer || !video || !caption || !date || !brand) {
+                if (!trailerInput || !videoInput || !captionInput || !dateInput || !brandInput || !castInput) {
                     alert('Some of values are null');
                     return;
                 }
