@@ -31,7 +31,6 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
 
         //because public folder is in root and we are in subdirectory, we go back with '..'
         let trailer_path = path.join(__dirname, '..', '..', 'private', 'trailers', `${trailer_name_with_ext}`)
-        let thumb_path = path.join(__dirname, '..', '..', 'private', 'thumbs', `${thumb_name}.jpg`)
 
         //video dimensions... will be modifided by ffmpeg
         let v_width = 320
@@ -72,19 +71,6 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
             let finish = 'Trailer Download Finished'
             await socket.emit('result', finish)
 
-            // Generate the thumbnail
-            await new Promise((resolve, reject) => {
-                ffmpeg(trailer_path)
-                    .on('end', resolve)
-                    .on('error', reject)
-                    .screenshots({
-                        timestamps: ['50%'],
-                        filename: `${thumb_name}.jpg`,
-                        folder: path.dirname(thumb_path),
-                        size: '320x180'
-                    });
-            }).catch(e => console.log(e))
-
             let duration = await new Promise((resolve, reject) => {
                 ffmpeg.ffprobe(trailer_path, (err, metadata) => {
                     if (err) { return reject(err) }
@@ -112,12 +98,10 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
             // Upload the video to Telegram
             await socket.emit('result', 'Starting Uploading Trailer to Telegram...')
             await bot.api.sendVideo(1473393723, new InputFile(trailer_path), {
-                thumbnail: new InputFile(thumb_path),
                 duration: duration,
                 supports_streaming: true,
                 width: v_width, height: v_height
             })
-            fs.unlinkSync(thumb_path)
             await socket.emit('result', '✅ Finish uploading Trailer to Telegram')
         });
 
