@@ -17,7 +17,7 @@ const videoDataSocket = async (socket) => {
         let brand = data.brand
 
         //uploading trailer
-        await uploadingTrailer(socket, trailer, `${OTPName}.mp4`, OTPName, 'Trailer')
+        await uploadingTrailer(socket, trailer, OTPName, OTPName, 'Trailer')
         .catch(e => console.log(e))
 
         //uploading video

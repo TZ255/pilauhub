@@ -24,13 +24,14 @@ const bot = new Bot(process.env.BOT_TOKEN, {
 })
 
 //uploading trailer and generate post thumb
-const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name, typeVideo) => {
+const uploadingTrailer = async (socket, durl, trailer_name, thumb_name, typeVideo) => {
     try {
         //starting
         await socket.emit('result', `${typeVideo} is starting downloading`)
 
         //because public folder is in root and we are in subdirectory, we go back with '..'
-        let trailer_path = path.join(__dirname, '..', '..', 'private', 'trailers', `${trailer_name_with_ext}`)
+        let trailer_path = path.join(__dirname, '..', '..', 'private', 'trailers', `${trailer_name}.mkv`)
+        let tg_fpth = path.join(__dirname, '..', '..', 'private', 'trailers', `tg_${trailer_name}.jpeg`)
 
         //video dimensions... will be modifided by ffmpeg
         let v_width = 320
@@ -71,6 +72,19 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
             let finish = 'Trailer Download Finished'
             await socket.emit('result', finish)
 
+            // Generate the thumbnail
+            await new Promise((resolve, reject) => {
+                ffmpeg(trailer_path)
+                    .on('end', resolve)
+                    .on('error', reject)
+                    .screenshots({
+                        timestamps: ['50%'],
+                        filename: `tg_${thumb_name}.jpeg`,
+                        folder: path.dirname(tg_fpth),
+                        size: '320x180'
+                    });
+            }).catch(e => console.log(e))
+
             let duration = await new Promise((resolve, reject) => {
                 ffmpeg.ffprobe(trailer_path, (err, metadata) => {
                     if (err) { return reject(err) }
@@ -98,10 +112,12 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
             // Upload the video to Telegram
             await socket.emit('result', 'Starting Uploading Trailer to Telegram...')
             await bot.api.sendVideo(1473393723, new InputFile(trailer_path), {
+                thumbnail: new InputFile(tg_fpth),
                 duration: duration,
                 supports_streaming: true,
                 width: v_width, height: v_height
             })
+            fs.unlinkSync(tg_fpth) //unlink tg thumb
             await socket.emit('result', '✅ Finish uploading Trailer to Telegram')
         });
 
@@ -123,6 +139,7 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
 
         //because public folder is in root and we are in subdirectory, we go back with '..'
         let video_path = path.join(__dirname, '..', '..', 'storage', `${video_name}.mkv`)
+        let tg_path = path.join(__dirname, '..', '..', 'storage', `tele_${video_name}.jpeg`)
         let video_thumb = path.join(__dirname, '..', '..', 'private', 'thumbs', `${video_name}.jpg`)
 
         //video dimensions... will be modifided by ffmpeg
@@ -164,7 +181,7 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
             let finish = 'Video File Download Finished'
             await socket.emit('result', finish)
 
-            // Generate the thumbnail
+            // Generate the thumbnail for the project
             await new Promise((resolve, reject) => {
                 ffmpeg(video_path)
                     .on('end', resolve)
@@ -173,6 +190,19 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
                         timestamps: ['50%'],
                         filename: `${video_name}.jpg`,
                         folder: path.dirname(video_thumb),
+                        size: '568x320'
+                    });
+            })
+
+            // Generate the thumbnail for telegram
+            await new Promise((resolve, reject) => {
+                ffmpeg(video_path)
+                    .on('end', resolve)
+                    .on('error', reject)
+                    .screenshots({
+                        timestamps: ['50%'],
+                        filename: `tele_${video_name}.jpeg`,
+                        folder: path.dirname(tg_path),
                         size: '568x320'
                     });
             })
@@ -204,11 +234,12 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
             // Upload the video to Telegram
             await socket.emit('result', 'Starting Uploading to Telegram...')
             await bot.api.sendVideo(1473393723, new InputFile(video_path), {
-                thumbnail: new InputFile(video_thumb),
+                thumbnail: new InputFile(tg_path),
                 duration: duration,
                 supports_streaming: true,
                 width: v_width, height: v_height
             })
+            fs.unlinkSync(tg_path) //delete tg thumb
             await socket.emit('result', '✅ Finish uploading to Telegram')
         });
 
