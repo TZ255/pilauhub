@@ -79,7 +79,7 @@ const uploadingTrailer = async (socket, durl, trailer_name_with_ext, thumb_name,
                     .on('error', reject)
                     .screenshots({
                         timestamps: ['50%'],
-                        filename: `${trailer_path.split('.')[0]}.jpg`, //remove trailer path ext
+                        filename: `${thumb_name}.jpg`,
                         folder: path.dirname(thumb_path),
                         size: '320x180'
                     });
@@ -189,7 +189,7 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
                         timestamps: ['50%'],
                         filename: `${video_name}.jpg`,
                         folder: path.dirname(video_thumb),
-                        size: '320x180'
+                        size: '568x320'
                     });
             })
 
@@ -226,7 +226,6 @@ const uploadingVideos = async (socket, durl, video_name, typeVideo) => {
                 width: v_width, height: v_height
             })
             await socket.emit('result', '✅ Finish uploading to Telegram')
-            fs.unlinkSync(video_thumb); // delete telegram thumb
         });
 
         writer.on('error', err => {
