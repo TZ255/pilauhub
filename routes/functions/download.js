@@ -135,7 +135,7 @@ const uploadVideoToServerAndTelegram = async ({
         // Get video metadata
         const metadata = await getVideoMetadata(videoPath);
 
-        socket.emit('result', 'Starting Uploading Trailer to Telegram...');
+        socket.emit('result', `Starting Uploading ${type} to Telegram...`);
 
         // Upload to Telegram
         const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption);
@@ -173,7 +173,7 @@ const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) 
         },
         thumbnailSize: '568x320'
     });
-
+console.log(uploaded)
     //backup the video
     let bckup = await bot.api.copyMessage(process.env.OHMY_DB, process.env.BACKUP_CHANNEL, uploaded.telegram.msg_id)
 
