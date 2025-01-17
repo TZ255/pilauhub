@@ -24,7 +24,7 @@ const videoDataSocket = (socket) => {
             const fullVideo = await uploadingVideos(socket, video, fname, 'Full Video', fileCaption)
 
             //uploading trailer
-            const trailer_caption = `<blockquote><b>#Trailer (${date}) ${brand}</b></blockquote>\n\n<b>🎥 Title:</b> ${caption}\n<b>👥 Cast:</b> ${cast}\n\n<blockquote><b>📁 Size:</b> ${fullVideo.telegram.tg_size} | 🕝 ${fullVideo.metadata.minutes} minutes</blockquote>\n<b>Get Full Video 👇👇</b>`
+            const trailer_caption = `<blockquote><b>#Trailer (${date}) ${brand}</b></blockquote>\n\n<b>🎥 Title:</b> ${caption}\n<b>👥 Cast:</b> ${cast}\n\n<blockquote><b>📁 Size:</b> ${fullVideo.telegram.tg_size} MB | 🕝 ${fullVideo.metadata.minutes} minutes</blockquote>\n<b>Get Full Video 👇👇</b>`
 
             const vidTrailer = await uploadingTrailer(socket, trailer, fname, "Trailer", trailer_caption)
 
@@ -37,7 +37,7 @@ const videoDataSocket = (socket) => {
             await tgVideoModel.create({uniqueId: fullVideo.telegram.uniqueId, caption: `${caption} - With ${cast}`, fileId: fullVideo.telegram.fileId, fileType: 'video', nano: fname, backup: fullVideo.telegram?.backup, msgId: fullVideo.telegram.msg_id, file_size: fullVideo.telegram.tg_size})
             //saving to pilauweb
             let thumb_link = `/private/thumbs/${fname}.jpg`
-            let trailer_link = `/private/thumbs/${fname}.mkv`
+            let trailer_link = `/private/trailers/${fname}.mkv`
             await videoModel.create({nano: fname, title: caption, casts: cast, date: date, file_size: fullVideo.metadata.size, downloads: 0, thumb: thumb_link, trailer: trailer_link, tags: brand})
 
             //copy to pilauweb and newRT
