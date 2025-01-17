@@ -46,7 +46,7 @@ const downloadFile = async (url, destPath, socket, type) => {
 
     return new Promise((resolve, reject) => {
         writer.on('finish', () => {
-            socket.emit('result', `${type} Download Finished`);
+            socket.emit('result', `${type} Download Finished. Generating metadata...`);
             resolve();
         });
         writer.on('error', (err) => {
@@ -135,7 +135,7 @@ const uploadVideoToServerAndTelegram = async ({
         // Get video metadata
         const metadata = await getVideoMetadata(videoPath);
 
-        socket.emit('result', `Starting Uploading ${type} to Telegram...`);
+        socket.emit('result', `Done. Starting Uploading ${type} to Telegram...`);
 
         // Upload to Telegram
         const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption);
