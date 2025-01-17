@@ -162,7 +162,7 @@ const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) 
     const uploaded = await uploadVideoToServerAndTelegram({
         socket,
         url: durl,
-        chatId: process.env.OHMY_DB,
+        chatId: Number(process.env.OHMY_DB),
         videoName: videoName,
         caption: fileCaption,
         type: typeVideo,
@@ -173,9 +173,9 @@ const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) 
         },
         thumbnailSize: '568x320'
     });
-console.log(uploaded)
+
     //backup the video
-    let bckup = await bot.api.copyMessage(process.env.OHMY_DB, process.env.BACKUP_CHANNEL, uploaded.telegram.msg_id)
+    let bckup = await bot.api.copyMessage(Number(Number(process.env.BACKUP_CHANNEL), process.env.OHMY_DB), uploaded.telegram.msg_id)
 
     return {metadata: uploaded.metadata, telegram: {...uploaded.telegram, backup: bckup.message_id}}
 };
