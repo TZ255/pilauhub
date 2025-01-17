@@ -56,7 +56,7 @@ const downloadFile = async (url, destPath, socket, type) => {
 };
 
 // Helper function to generate thumbnails
-const generateThumbnail = (videoPath, thumbPath, size = '320x180') => {
+const generateThumbnail = (videoPath, thumbPath, size) => {
     return new Promise((resolve, reject) => {
         ffmpeg(videoPath)
             .screenshots({
@@ -90,7 +90,7 @@ const getVideoMetadata = (videoPath) => {
 
 // Helper function to upload video to Telegram
 const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption) => {
-    await bot.api.sendVideo(chatId, new InputFile(videoPath), {
+    let vid = await bot.api.sendVideo(chatId, new InputFile(videoPath), {
         thumbnail: new InputFile(thumbPath),
         parse_mode: 'HTML',
         caption,
@@ -99,12 +99,14 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption)
         width: metadata.width,
         height: metadata.height
     });
+    return {msg_id: vid.message_id, tg_size: Math.floor(vid.video?.file_size / (1024 * 1024)), fileId: vid.video.file_id, uniqueId: vid.video.file_unique_id}
 };
 
 // Generic upload function
 const uploadVideoToServerAndTelegram = async ({ 
     socket, 
     url, 
+    chatId,
     videoName, 
     caption,
     type, 
@@ -116,29 +118,35 @@ const uploadVideoToServerAndTelegram = async ({
 
         // Define paths
         const videoPath = paths.videoPath;
-        const thumbPath = paths.thumbPath;
+        const tgthumbPath = paths.tgthumbPath;
 
         // Download the video file
         await downloadFile(url, videoPath, socket, type);
 
-        // Generate thumbnails
-        await generateThumbnail(videoPath, thumbPath, thumbnailSize);
+        // Generate tg thumbnails
+        await generateThumbnail(videoPath, tgthumbPath, '320x180');
+
+        // Generate dbthumb if type do not include trailer
+        if(!type.toLowerCase().includes('trailer')) {
+            const db_thumbpath = paths?.db_thumbpath
+            await generateThumbnail(videoPath, db_thumbpath, thumbnailSize)
+        }
 
         // Get video metadata
         const metadata = await getVideoMetadata(videoPath);
 
-        socket.emit('result', 'Starting Uploading to Telegram...');
+        socket.emit('result', 'Starting Uploading Trailer to Telegram...');
 
         // Upload to Telegram
-        await uploadToTelegram(process.env.TELEGRAM_CHAT_ID, videoPath, thumbPath, metadata, caption);
+        const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption);
 
         // Cleanup thumbnails
-        await fs.unlink(thumbPath);
+        await fs.unlink(tgthumbPath);
 
         socket.emit('result', `✅ Finish uploading ${type} to Telegram`);
 
         //get the metadata to be used on the trailer caption
-        return {metadata: metadata}
+        return {metadata: metadata, telegram: tg_data}
     } catch (error) {
         socket.emit('errorMessage', error.message);
         console.error(`Error in uploading ${type}:`, error);
@@ -147,45 +155,75 @@ const uploadVideoToServerAndTelegram = async ({
 
 // Specific function for uploading regular videos
 const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) => {
-    const videoPath = path.resolve(__dirname, '..', '..', 'storage', `${videoName}.mkv`);
-    const thumbPath = path.resolve(__dirname, '..', '..', 'storage', `tele_${videoName}.jpeg`);
+    const videoPath = path.resolve(__dirname, '..', '..', 'storage', `${videoName}.mkv`)
+    const db_thumbpath = path.resolve(__dirname, '..', '..', 'private', 'thumbs', `${videoName}.jpg`)
+    const tgthumbPath = path.resolve(__dirname, '..', '..', 'storage', `tele_${videoName}.jpeg`)
 
     const uploaded = await uploadVideoToServerAndTelegram({
         socket,
         url: durl,
+        chatId: process.env.OHMY_DB,
         videoName: videoName,
         caption: fileCaption,
         type: typeVideo,
         paths: {
             videoPath,
-            thumbPath
+            tgthumbPath,
+            db_thumbpath
         },
         thumbnailSize: '568x320'
     });
-    return {metadata: uploaded.metadata}
+
+    //backup the video
+    let bckup = await bot.api.copyMessage(process.env.OHMY_DB, process.env.BACKUP_CHANNEL, uploaded.telegram.msg_id)
+
+    return {metadata: uploaded.metadata, telegram: {...uploaded.telegram, backup: bckup.message_id}}
 };
 
 
 // Specific function for uploading trailers (start with full video then trailer to get full video metadata)
 const uploadingTrailer = async (socket, durl, trailerName, typeVideo, trailerCaption) => {
     const trailerPath = path.resolve(__dirname, '..', '..', 'private', 'trailers', `${trailerName}.mkv`);
-    const thumbPath = path.resolve(__dirname, '..', '..', 'private', 'trailers', `tg_${trailerName}.jpeg`);
+    const tgthumbPath = path.resolve(__dirname, '..', '..', 'private', 'trailers', `tg_${trailerName}.jpeg`);
 
-    await uploadVideoToServerAndTelegram({
+    let uploaded = await uploadVideoToServerAndTelegram({
         socket,
         url: durl,
+        chatId: process.env.REPLY_DB,
         videoName: trailerName,
         caption: trailerCaption,
         type: typeVideo,
         paths: {
             videoPath: trailerPath,
-            thumbPath
+            tgthumbPath
         },
         thumbnailSize: '320x180'
     });
+    return {metadata: uploaded.metadata, telegram: uploaded.telegram}
 };
+
+
+// TG Forwarding
+// sendToPilauHub
+const copyToPilauHub = async (hubID, trailerID, msg_id, downloadUrl, socket) => {
+    try {
+        await bot.api.copyMessage(hubID, trailerID, msg_id, {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {text: '📥 DOWNLOAD FULL VIDEO', url: downloadUrl}
+                    ]
+                ]
+            }
+        })
+    } catch (error) {
+        console.error()
+        socket.omit('errorMessage', 'Failed to copy to pilauhub')
+    }
+}
 
 module.exports = {
     uploadingTrailer,
-    uploadingVideos
+    uploadingVideos,
+    copyToPilauHub
 };

@@ -15,13 +15,16 @@ const tgSchema = new Schema({
         type: String
     },
     caption_entities: {
-        type: Array
+        type: Array, default: []
     },
     nano: {
         type: String,
         unique: true
     },
     msgId: {
+        type: Number
+    },
+    backup: {
         type: Number
     }
 

@@ -2,12 +2,15 @@ const mongoose = require('mongoose');
 
 const videoSchema = new mongoose.Schema(
   {
-    nanoid: { type: String, required: true },
+    nano: { type: String, required: true },
     title: { type: String, required: true },
     casts: { type: String, required: true },
+    file_size: { type: Number },
     date: {type: String, required: true},
     tags: {type: String},
-    downloads: {type: String},
+    downloads: {type: Number},
+    thumb: {type: String},
+    trailer: {type: String},
     backup: {type: Boolean, default: false},
   },
   { strict: false, timestamps: true }
