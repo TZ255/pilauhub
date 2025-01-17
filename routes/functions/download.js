@@ -218,7 +218,7 @@ const copyToPilauHub = async (hubID, trailerID, msg_id, downloadUrl, socket) => 
         })
     } catch (error) {
         console.error()
-        socket.omit('errorMessage', 'Failed to copy to pilauhub')
+        socket.emit('errorMessage', 'Failed to copy to pilauhub')
     }
 }
 

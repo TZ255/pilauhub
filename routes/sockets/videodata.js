@@ -42,8 +42,8 @@ const videoDataSocket = (socket) => {
 
             //copy to pilauweb and newRT
             let downloadUrl = `https://t.me/pilau_bot?start=RTBOT-${fname}`
-            await copyToPilauHub(process.env.PILAUHUB_CHANNEL, process.env.REPLY_DB, vidTrailer.telegram.msg_id, downloadUrl, socket)
-            await copyToPilauHub(process.env.NEWRT_CHANNEL, process.env.REPLY_DB, vidTrailer.telegram.msg_id, downloadUrl, socket)
+            await copyToPilauHub(Number(process.env.PILAUHUB_CHANNEL), Number(process.env.REPLY_DB), vidTrailer.telegram.msg_id, downloadUrl, socket)
+            await copyToPilauHub(Number(process.env.NEWRT_CHANNEL), Number(process.env.REPLY_DB), vidTrailer.telegram.msg_id, downloadUrl, socket)
 
             //finished
             socket.emit('finalMessage', `✅ 100% Finished - ${fname}`)
