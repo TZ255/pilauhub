@@ -25,4 +25,33 @@ router.get('/admin/portal', isAuth, async (req, res) => {
     }
 })
 
+router.get('/video/:nano', isAuth, async (req, res)=> {
+    try {
+        const nano = req.params.nano
+        const userid = req.user._id
+
+        //check if users has enough points
+        const user = await userModel.findById(userid)
+        if(user?.points < 250) {
+            return res.render('points-pages/nopoint', {user: req.user})
+        }
+        const video = await videoModel.findOne({nano})
+        res.render('video/video', {user: req.user, video})
+    } catch (error) {
+        res.send('Oops! Samahani, kumetokea tatizo la kimtandao. Jaribu tena')
+        console.error(error)
+    }
+})
+
+router.get('/user/add-points', isAuth, async (req, res)=> {
+    try {
+        res.render('points-pages/add', {user: req.user})
+    } catch (error) {
+        res.send('Oops! Samahani, kumetokea tatizo la kimtandao. Jaribu tena')
+        console.error(error)
+    }
+})
+
+
+
 module.exports = router

@@ -20,12 +20,22 @@
         <h2 class="fs-5 fw-bold text-light border-bottom border-dark-subtle">Latest Videos</h2>
         <div class="thumbs">
             <% videos.forEach(vid => { %>
-                <div class="card border border-0 my-3 mx-auto" style="width: 98%;">
-                    <img src="<%= vid.thumb %>" alt=".." height="220">
+                <div class="card border-0 my-3 py-0 mx-auto rounded" style="width: 98%;">
+                    <a href="/video/<%= vid.nano %>" class="d-block position-relative">
+                        <!-- Image -->
+                        <img src="<%= vid.thumb %>" alt="<%= vid.title %>" height="220" class="w-100 rounded-top">
+                        
+                        <!-- Play Button Overlay -->
+                        <span class="position-absolute top-50 start-50 translate-middle text-decoration-none">
+                            <i class="fa-brands fa-youtube hubColor" style="font-size: 48px; opacity: 0.7;"></i>
+                        </span>
+                    </a>
                     <div class="card-body bg-dark">
                         <h5 class="card-title text-light"><%= vid.title %></h5>
                         <p class="card-text text-dark-white"><b><%= vid.date %></b> - <%= vid.casts %></p>
-                        <p class="text-dark-white"><%= vid.tags %></p>
+                        <p class="text-dark-white card-text">
+                            <a href="/tag/<%= encodeURIComponent(vid.tags) %>" class="hubColor"><%= vid.tags %></a>
+                        </p>
                     </div>
                 </div>
             <% }) %>

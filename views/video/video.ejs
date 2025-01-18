@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../0-global-partials/boostrapcss.ejs'); %>
+    <%- include('../0-global-partials/style.ejs'); %>
+    <%- include('./partials/style.ejs'); %>
+    <title>PilauHub User<%= user.username %></title>
+</head>
+
+<body>
+    <%- include('../0-global-partials/nav.ejs'); %>
+    <div class="email text-xs text-dark-white mt-3 p-2">
+        <i class="fa-solid fa-o text-dark-white"></i>
+        Logged in as <span class="hubColor"><%= user.email %></span>
+    </div>
+    <section class="latest mt-5 p-2">
+        <h2 class="fs-5 fw-bold text-light border-bottom border-dark-subtle">Download </h2>
+        <div class="thumbs">
+            
+        </div>
+    </section>
+
+    <%- include('../0-global-partials/boostrapjs.ejs'); %>
+</body>
+
+</html>

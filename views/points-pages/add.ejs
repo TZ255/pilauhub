@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../0-global-partials/boostrapcss.ejs'); %>
+    <%- include('../0-global-partials/style.ejs'); %>
+    <%- include('./partials/style.ejs'); %>
+    <title>Ongeza Points PilauHub User<%= user.username %></title>
+</head>
+
+<body>
+    <%- include('../0-global-partials/nav.ejs'); %>
+    <section class="latest mt-5 p-2">
+        <h2 class="fs-5 fw-bold text-light border-bottom border-dark-subtle pb-1">Viwango vya Malipo</h2>
+        <%- include('./partials/accordion.ejs'); %>
+        <br><br><br>
+        <h2 class="fs-5 fw-bold text-light border-bottom border-dark-subtle pb-1">Jinsi ya Kufanya Malipo</h2>
+        <%- include('./partials/malipo.ejs'); %>
+    </section>
+
+    <%- include('../0-global-partials/boostrapjs.ejs'); %>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Yinka Enoch Adedokun">
+    <%- include('../0-global-partials/boostrapcss.ejs'); %>
+    <%- include('../0-global-partials/style.ejs'); %>
+    <%- include('./partials/style.ejs'); %>
+    <title>Not enough poinst</title>
+</head>
+
+<body>
+    <div class="d-flex justify-content-center align-items-center vh-100 text-center">
+        <div class="my-card text-light h-auto rounded p-3">
+            <div class="error my-3">
+                <i class="fa-solid fa-circle-exclamation hubColor" style="font-size: 52px;"></i>
+            </div>
+            <div class="titleform fs-4 text-center mb-2 fw-bold">
+                Salio lako la <span class="hubColor">Points</span> Halitoshi!
+            </div>
+            <%- include('../0-global-partials/messages.ejs'); %>
+            <div class="text-light">
+                <p>
+                    Pole! Salio lako la points halitoshi kupakua video hii. Una jumla ya <b>points <span class="hubColor"><%= user.points %></span></b>
+                </p> 
+                <p>Tafadhali ongeza points kwa kubonyeza button hii hapa chini</p>
+                <div class="text-center mt-4">
+                    <a href="/user/add-points" class="btn bataniHub text-dark" style="width: 75%; max-width: 360px;">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        Ongeza Points
+                    </a>
+                </div>
+            </div>
+            <div class="foot text-center mt-3">
+                <p class="mb-3 mt-5 text-dark-white">Ikiwa tayari ulifanya malipo? <br> <a href="/user/paid" class="hubColor">Bonyeza Hapa</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

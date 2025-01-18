@@ -1,0 +1,127 @@
+<div class="accordion accordion-flush" id="fanya-malipo">
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button fw-bold fs-6" type="button" style="background-color: var(--accent);"
+                data-bs-toggle="collapse" data-bs-target="#collapseOneMalipo" aria-expanded="true"
+                aria-controls="collapseOneMalipo">
+                🇹🇿 Tanzania
+            </button>
+        </h2>
+        <div id="collapseOneMalipo" class="accordion-collapse collapse show" data-bs-parent="#fanya-malipo">
+            <div class="accordion-body text-light" style="background-color: var(--primary-bg);">
+                Tuma pesa kwenda namba yetu ya VodaCom (M-Pesa)
+                <ul style="list-style: circle;">
+                    <li>Number: <span id="tzno" class="hubColor">0757259678</span>
+                        <button class="d-inline-block text-xs rounded ms-1 copyTZ" onclick="CopyNum('tz')">Copy</button>
+                    </li>
+                    <li>Name: <span id="tzname">Paulo</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold fs-6" type="button"
+                style="background-color: var(--accent);" data-bs-toggle="collapse" data-bs-target="#collapseTwoMalipo"
+                aria-expanded="false" aria-controls="collapseTwoMalipo">
+                🇰🇪 Kenya
+            </button>
+        </h2>
+        <div id="collapseTwoMalipo" class="accordion-collapse collapse" data-bs-parent="#fanya-malipo">
+            <div class="accordion-body" style="background-color: var(--primary-bg);">
+                <div class="accordion-body text-light" style="background-color: var(--primary-bg);">
+                    * For Safaricom users only
+                    <ul style="list-style: circle;">
+                        <li><b class="sNum">Dial *840#</b></li>
+                        <li>Select Send Money Abroad</li>
+                        <li>Select Send to Mobile Number</li>
+                        <li>Select Tanzania</li>
+                        <li>Enter: <span class="sNum hubColor">255757259678</span>
+                            <button class="d-inline-block text-xs rounded ms-1 copyTZ" onclick="CopyNum('int')">
+                                Copy
+                            </button>
+                        </li>
+                        <li>Enter amount in <b>Ksh</b></li>
+                        <li>Select any source & purpose</li>
+                        <li>Confirm</li>
+                        <li>Name: <span id="tzname">Paulo</span></li>
+                    </ul>
+                    * Using Safaricom Mobile App
+                    <ul style="list-style: circle;">
+                        <li>Select Send/Request</li>
+                        <li>Choose GLOBAL</li>
+                        <li>Select Send to Mobile Number</li>
+                        <li>Select Tanzania</li>
+                        <li>Enter No.: <span class="sNum hubColor">255757259678</span>
+                            <button class="d-inline-block text-xs rounded ms-1 copyTZ" onclick="CopyNum('int')">
+                                Copy
+                            </button>
+                        </li>
+                        <li>Enter amount, source and purpose then Confirm</li>
+                        <li>Name: <span class="sNum">Paulo</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold fs-6" type="button"
+                style="background-color: var(--accent);" data-bs-toggle="collapse" data-bs-target="#collapseThreeMalipo"
+                aria-expanded="false" aria-controls="collapseThreeMalipo">
+                🇺🇬 Uganda
+            </button>
+        </h2>
+        <div id="collapseThreeMalipo" class="accordion-collapse collapse" data-bs-parent="#fanya-malipo">
+            <div class="accordion-body text-light" style="background-color: var(--primary-bg);">
+                * Airtel Uganda
+                <ul style="list-style: circle;">
+                    <li class="sNum">Dial *185#</li>
+                    <li>Select 1. Send Money</li>
+                    <li>Choose 4. International Transfer</li>
+                    <li>Select Tanzania</li>
+                    <li>Enter No.: <span class="sNum hubColor">255757259678</span>
+                        <button class="d-inline-block text-xs rounded ms-1 copyTZ" onclick="CopyNum('int')">
+                            Copy
+                        </button>
+                    </li>
+                    <li>Enter Amount</li>
+                    <li>Enter PIN to confirm</li>
+                </ul>
+                * MTN Uganda (MoMo)
+                <ul style="list-style: circle;">
+                    <li class="sNum">Dial *165#</li>
+                    <li>Choose Send Money</li>
+                    <li>Choose East Africa</li>
+                    <li>Choose Tanzania</li>
+                    <li>Choose Vodacom Tanzania</li>
+                    <li>Enter No.: 
+                        <span class="sNum hubColor">255757259678</span>
+                        <button class="d-inline-block text-xs rounded ms-1 copyTZ" onclick="CopyNum('int')">
+                            Copy
+                        </button>
+                    </li>
+                    <li>Enter Amount</li>
+                    <li>Enter PIN to confirm</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function CopyNum(e) {
+        switch(e) {
+            case 'int':
+                let num = '255757259678'
+                navigator.clipboard.writeText(num)
+                alert('✅ Number copied')
+                break;
+            case 'tz':
+                let num_tz = '0757259678'
+                navigator.clipboard.writeText(num_tz)
+                alert('✅ Number copied')
+                break;
+        }
+    }
+</script>
