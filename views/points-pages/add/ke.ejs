@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../../0-global-partials/boostrapcss.ejs'); %>
+    <%- include('../../0-global-partials/style.ejs'); %>
+    <%- include('../partials/style.ejs'); %>
+    <title>Ongeza Points PilauHub User<%= user.username %></title>
+</head>
+
+<body>
+    <%- include('../../0-global-partials/nav.ejs'); %>
+    <section class="latest mt-5 p-2">
+        <h2 class="fs-5 fw-bold text-light border-bottom border-dark-subtle pb-1">Viwango vya Malipo</h2>
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Points</th>
+                    <th scope="col">Cc</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ksh. 101</td>
+                    <td>1500</td>
+                    <td>🇰🇪</td>
+                </tr>
+                <tr>
+                    <td>Ksh. 150</td>
+                    <td>2500</td>
+                    <td>🇰🇪</td>
+                </tr>
+                <tr>
+                    <td>Ksh. 250</td>
+                    <td>5000</td>
+                    <td>🇰🇪</td>
+                </tr>
+                <tr>
+                    <td>Ksh. 500</td>
+                    <td>12000</td>
+                    <td>🇰🇪</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <h2 class="fs-5 fw-bold text-light border-bottom border-dark-subtle pb-1">Jinsi ya Kufanya Malipo</h2>
+        <div class="accordion-body text-light" style="background-color: var(--primary-bg);">
+            * For Safaricom users only
+            <ul style="list-style: circle;">
+                <li><b class="sNum">Dial *840#</b></li>
+                <li>Select Send Money Abroad</li>
+                <li>Select Send to Mobile Number</li>
+                <li>Select Tanzania</li>
+                <li>Enter: <span class="sNum hubColor">255757259678</span>
+                    <button class="d-inline-block text-xs rounded ms-1 copyTZ" onclick="CopyNum('int')">
+                        Copy
+                    </button>
+                </li>
+                <li>Enter amount in <b>Ksh</b></li>
+                <li>Select any source & purpose</li>
+                <li>Confirm</li>
+                <li>Name: <span id="tzname">Paulo</span></li>
+            </ul>
+            * Using Safaricom Mobile App
+            <ul style="list-style: circle;">
+                <li>Select Send/Request</li>
+                <li>Choose GLOBAL</li>
+                <li>Select Send to Mobile Number</li>
+                <li>Select Tanzania</li>
+                <li>Enter No.: <span class="sNum hubColor">255757259678</span>
+                    <button class="d-inline-block text-xs rounded ms-1 copyTZ" onclick="CopyNum('int')">
+                        Copy
+                    </button>
+                </li>
+                <li>Enter amount, source and purpose then Confirm</li>
+                <li>Name: <span class="sNum">Paulo</span></li>
+            </ul>
+        </div>
+    </section>
+
+    <%- include('../partials/script.ejs'); %>
+    <%- include('../../0-global-partials/boostrapjs.ejs'); %>
+</body>
+</html>
