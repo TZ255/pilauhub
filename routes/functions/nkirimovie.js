@@ -135,12 +135,12 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
     try {
         let thumbPath = path.resolve(__dirname, '..', '..', 'public', 'essentials', `thumb-movie.jpeg`)
 
-        await bot.api.sendPhoto(process.env.HALOT_ID, imgUrl, {
+        await bot.api.sendPhoto(Number(process.env.MUVIKA_TRAILERS), imgUrl, {
             parse_mode: 'HTML',
             caption: photCaption
         })
 
-        let tg_res = await bot.api.sendDocument(process.env.HALOT_ID, new InputFile(destPath), {
+        let tg_res = await bot.api.sendDocument(Number(process.env.OHMY_DB), new InputFile(destPath), {
             thumbnail: new InputFile(thumbPath),
             parse_mode: 'HTML',
             caption: fileCaption
@@ -210,8 +210,7 @@ const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, im
             }
             socket.emit('result', `Finished editing metadata. Uploading to telegram... ⏳`);
             let telegram = await uploadingToTelegram(destPath, fileCaption, imgUrl, photCaption, socket)
-            socket.emit('result', `Finished uploading to Telegram`);
-            console.log(telegram)
+            socket.emit('result', `Finished uploading to Telegram. Saving to DB... ⏳`);
             await fs.unlink(destPath)
             resolve({telegram})
         });
@@ -222,4 +221,10 @@ const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, im
     });
 };
 
-module.exports = {scrapeNkiriPage, GetDirectDownloadLink, downloadFile}
+// Copying telegram
+const copyingTelegram = async (msgid) => {
+    let bc = await bot.api.copyMessage(Number(process.env.BACKUP_CHANNEL), process.env.OHMY_DB, msgid)
+    return bc.message_id
+}
+
+module.exports = {scrapeNkiriPage, GetDirectDownloadLink, downloadFile, copyingTelegram}
