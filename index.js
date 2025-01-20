@@ -14,6 +14,7 @@ const isAuth = require('./routes/functions/isAuth');
 const http = require('http');
 const socketIO = require('socket.io');
 const videoDataSocket = require('./routes/sockets/videodata');
+const movieDataSocket = require('./routes/sockets/moviedata');
 
 const app = express();
 
@@ -90,6 +91,7 @@ const io = socketIO(server)
 
 // Handle Socket.IO connections on '/receive/socket' namespace
 const receiveSocket = io.of('/receive/videodata');
+const receiveMovie = io.of('/receive/moviedata')
 
 receiveSocket.on('connection', (socket) => {
   console.log('New Socket.IO connection established on /receive/videodata');
@@ -99,6 +101,22 @@ receiveSocket.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Socket.IO connection closed');
+  });
+
+  socket.on('error', (error) => {
+    console.error(`Socket.IO error: ${error}`);
+  });
+});
+
+//movie
+receiveMovie.on('connection', (socket) => {
+  console.log('New Socket.IO Movie connection established on /receive/moviedata');
+
+  //sockets goes here
+  movieDataSocket(socket)
+
+  socket.on('disconnect', () => {
+    console.log('Socket.IO movie connection closed');
   });
 
   socket.on('error', (error) => {

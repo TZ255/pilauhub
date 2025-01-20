@@ -25,6 +25,18 @@ router.get('/admin/portal', isAuth, async (req, res) => {
     }
 })
 
+router.get('/admin/portal/movie', isAuth, async (req, res) => {
+    try {
+        let user = await userModel.findOne({ email: req?.user?.email })
+        if (!user || user && user.role !== 'admin') {
+            return res.send('You are not authorized')
+        }
+        res.render('admin/movie', { user: req.user })
+    } catch (error) {
+        res.send(error.message)
+    }
+})
+
 router.get('/video/:nano', isAuth, async (req, res) => {
     try {
         const nano = req.params.nano
