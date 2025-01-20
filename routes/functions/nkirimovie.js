@@ -131,7 +131,7 @@ async function GetDirectDownloadLink(url, socket) {
 //#############################################################
 //#############################################################
 
-const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption) => {
+const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, socket) => {
     try {
         let thumbPath = path.resolve(__dirname, '..', '..', 'public', 'essentials', `thumb-movie.jpeg`)
 
@@ -209,7 +209,7 @@ const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, im
                 });
             }
             socket.emit('result', `Finished editing metadata. Uploading to telegram... ⏳`);
-            let telegram = await uploadingToTelegram(destPath, fileCaption, imgUrl, photCaption)
+            let telegram = await uploadingToTelegram(destPath, fileCaption, imgUrl, photCaption, socket)
             socket.emit('result', `Finished uploading to Telegram`);
             console.log(telegram)
             await fs.unlink(destPath)
