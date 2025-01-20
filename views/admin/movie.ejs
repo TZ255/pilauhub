@@ -23,10 +23,6 @@
         <div class="posting p-2">
             <form id="videoform" action="/post/movie" method="post">
                 <div class="mb-3">
-                    <label for="date" class="form-label"><i class="fa-solid fa-calendar-days"></i> Date</label>
-                    <input id="date" type="date" class="form-control" name="date" required>
-                </div>
-                <div class="mb-3">
                     <label for="video" class="form-label"><i class="fa-solid fa-video"></i> Video</label>
                     <input id="video" type="text" class="form-control" name="video" required>
                 </div>
@@ -51,7 +47,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('videoform');
             const videoInput = document.getElementById('video');
-            const dateInput = document.getElementById('date')
             const resultsDiv = document.getElementById('resulting');
             const statusDiv = document.getElementById('status');
             const listsFinished = document.getElementById('list-uploaded')
@@ -109,10 +104,9 @@
                 e.preventDefault();
                 const data = {
                     nkiri_link: videoInput.value.trim(),
-                    html_date: dateInput.value,
                 }
 
-                if (!videoInput || !dateInput) {
+                if (!videoInput) {
                     alert('Some of values are null');
                     return;
                 }
