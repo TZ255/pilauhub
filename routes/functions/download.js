@@ -140,8 +140,9 @@ const uploadVideoToServerAndTelegram = async ({
         // Upload to Telegram
         const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption);
 
-        // Cleanup thumbnails
+        // Cleanup thumbnails and video
         await fs.unlink(tgthumbPath);
+        await fs.unlink(videoPath)
 
         socket.emit('result', `✅ Finish uploading ${type} to Telegram`);
 
