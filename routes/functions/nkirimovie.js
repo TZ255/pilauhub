@@ -21,21 +21,6 @@ const bot = new Bot(process.env.BOT_TOKEN, {
     client: { apiRoot: process.env.API_ROOT }
 });
 
-// Create a custom HTTPS agent that allows self-signed certificates
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
-    // Enable legacy SSL/TLS versions if needed
-    secureProtocol: 'TLS_method',
-    // Increase key size for better compatibility
-    secureOptions: require('constants').SSL_OP_LEGACY_SERVER_CONNECT
-});
-
-// Create a custom axios instance with the HTTPS agent
-const customAxios = axios.create({
-    httpsAgent,
-    timeout: 30000 // 30 second timeout
-});
-
 
 async function scrapeNkiriPage(url, socket) {
     try {
