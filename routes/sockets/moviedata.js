@@ -34,7 +34,8 @@ const movieDataSocket = (socket) => {
                 return durl
             }
 
-            let fileName = String(durl).split('/').pop().replace(new RegExp('NKIRI.COM', 'gi'), '').replace('()', '').replace('Moana', 'Maona')
+            let nkirifrom = 'DOWNLOADED.FROM.NKIRI.COM'
+            let fileName = String(durl).split('/').pop().replace(new RegExp('(NKIRI.COM).', 'gi'), '').replace(nkirifrom, '').replace('Moana', 'Maona')
 
             socket.emit('result', '✅ Done. We got DDL')
 
