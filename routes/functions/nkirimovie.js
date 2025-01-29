@@ -139,13 +139,15 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
             thumbnail: new InputFile(thumbPath),
             parse_mode: 'HTML',
             caption: fileCaption
+        }).catch(e => {
+            console.log(e)
+            return;
         })
         await bot.api.sendPhoto(Number(process.env.MUVIKA_TRAILERS), imgUrl, {
             parse_mode: 'HTML',
             caption: photCaption
         })
         socket.emit('result', `✅ Finished uploading to Telegram`);
-        console.log({msgid: tg_res.message_id, uniqueId: tg_res.document.file_unique_id, fileid: tg_res.document.file_id})
         return {msgid: tg_res.message_id, uniqueId: tg_res.document.file_unique_id, fileid: tg_res.document.file_id}
     } catch (error) {
         console.log(error.message, error)
