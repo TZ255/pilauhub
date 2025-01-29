@@ -179,7 +179,7 @@ const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, im
     try {
         const response = await axios.get(durl, {
             responseType: 'stream',
-            httpsAgent: new https.Agent({ rejectUnauthorized: false })
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }) // Consider the security implications
         });
 
         const totalSize = parseInt(response.headers['content-length'], 10);
