@@ -145,10 +145,11 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
             caption: photCaption
         })
         socket.emit('result', `✅ Finished uploading to Telegram`);
+        console.log({msgid: tg_res.message_id, uniqueId: tg_res.document.file_unique_id, fileid: tg_res.document.file_id})
         return {msgid: tg_res.message_id, uniqueId: tg_res.document.file_unique_id, fileid: tg_res.document.file_id}
     } catch (error) {
         console.log(error.message, error)
-        return socket.emit('errorMessage', `Failed uploading telegram... Error! ${error.message}`);
+        socket.emit('errorMessage', `Failed uploading telegram... Error! ${error.message}`);
     }
 }
 
