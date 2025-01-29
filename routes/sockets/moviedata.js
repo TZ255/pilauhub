@@ -41,7 +41,7 @@ const movieDataSocket = (socket) => {
 
             //downloading the file
             let botlink = `<a href="https://t.me/muvikabot?start=MOVIE-FILE${nano}">https://t.me/download/movie/${nano}</a>`
-            const fileCaption = `<b>Full Movie with English Subtitles</b>`
+            const fileCaption = `<b>${movieName} with English Subtitles</b>`
             const photoCaption = `<b>🎬 Movie: ${movieName}</b>\n\n\n<b>📄 Overview:</b>\n${synopsisText}\n\n---\n\n<b>Download Full HD Movie with English Subtitles Below\n\n📥 Download 👇\n${botlink}</b>`
             let tg_res = await downloadFile(durl, socket, fileName, fileCaption, photoCaption, ogImage)
             const {msgid, uniqueId, fileid} = tg_res.telegram
