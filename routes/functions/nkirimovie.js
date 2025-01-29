@@ -133,92 +133,122 @@ async function GetDirectDownloadLink(url, socket) {
 
 const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, socket) => {
     try {
-        let thumbPath = path.resolve(__dirname, '..', '..', 'public', 'essentials', `thumb-movie.jpeg`)
+        let thumbPath = path.resolve(__dirname, '..', '..', 'public', 'essentials', 'thumb-movie.jpeg');
 
-        let tg_res = await bot.api.sendDocument(Number(process.env.OHMY_DB), new InputFile(destPath), {
+        // First attempt to send the document
+        const documentResult = await bot.api.sendDocument(Number(process.env.OHMY_DB), new InputFile(destPath), {
             thumbnail: new InputFile(thumbPath),
             parse_mode: 'HTML',
             caption: fileCaption
-        })
-        console.log(tg_res)
+        }).catch(error => {
+            console.error('Document upload error:', error);
+            throw new Error(`Failed to upload document: ${error.message}`);
+        });
+
+        if (!documentResult) {
+            throw new Error('Document upload failed - no response received');
+        }
+
+        // Then attempt to send the photo
         await bot.api.sendPhoto(Number(process.env.MUVIKA_TRAILERS), imgUrl, {
             parse_mode: 'HTML',
             caption: photCaption
-        })
-        socket.emit('result', `✅ Finished uploading to Telegram`);
-        return {msgid: tg_res.message_id, uniqueId: tg_res.document.file_unique_id, fileid: tg_res.document.file_id}
+        }).catch(error => {
+            console.error('Photo upload error:', error);
+            // Don't throw here as the document upload succeeded
+        });
+
+        socket.emit('result', '✅ Finished uploading to Telegram');
+        
+        return {
+            msgid: documentResult.message_id,
+            uniqueId: documentResult.document?.file_unique_id,
+            fileid: documentResult.document?.file_id
+        };
     } catch (error) {
-        console.log(error.message, error)
-        socket.emit('errorMessage', `Failed uploading telegram... Error! ${error.message}`);
+        console.error('Telegram upload error:', error);
+        socket.emit('errorMessage', `Failed uploading to telegram... Error! ${error.message}`);
+        throw error; // Re-throw to handle in the calling function
     }
-}
+};
 
 // Helper function to download a file with progress tracking
 const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, imgUrl) => {
-    const destPath = path.resolve(__dirname, '..', '..', 'storage', `${fileName}`)
+    const destPath = path.resolve(__dirname, '..', '..', 'storage', fileName);
+    
+    try {
+        const response = await axios.get(durl, {
+            responseType: 'stream',
+            httpsAgent: new https.Agent({ rejectUnauthorized: false })
+        });
 
-    const response = await axios.get(durl, {
-        responseType: 'stream',
-        httpsAgent: new https.Agent({ rejectUnauthorized: false }) // Consider the security implications
-    });
+        const totalSize = parseInt(response.headers['content-length'], 10);
+        let downloadedSize = 0;
+        let lastLogTime = Date.now();
 
-    const totalSize = parseInt(response.headers['content-length'], 10);
-    let downloadedSize = 0;
-    let lastLogTime = Date.now();
+        const writer = response.data.pipe(require('fs').createWriteStream(destPath));
 
-    const writer = response.data.pipe(require('fs').createWriteStream(destPath));
-
-    response.data.on('data', (chunk) => {
-        downloadedSize += chunk.length;
-        const now = Date.now();
-        if (now - lastLogTime >= 1000) { // Emit every second
-            const progress = ((downloadedSize / totalSize) * 100).toFixed(1);
-            const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(2);
-            const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-            socket.emit('result', `Downloaded: ${downloadedMB}MB of ${totalMB}MB (${progress}%)`);
-            lastLogTime = now;
-        }
-    });
-
-    return new Promise((resolve, reject) => {
-        writer.on('finish', async () => {
-            socket.emit('result', `Download Finished. Generating metadata...`);
-
-            //check if mkv edit metadatas
-            const isMKV = path.extname(fileName).toLowerCase() === '.mkv'
-
-            if (isMKV) {
-                // Step 1: Edit global container metadata
-                await execPromise(`mkvpropedit "${destPath}" --edit info --set "title=Downloaded from MUVIKA ZONE"`);
-
-                // Step 2: Edit track-level metadata (video track)
-                await execPromise(`mkvpropedit "${destPath}" --edit track:1 --set "name=Downloaded from MUVIKA ZONE"`);
-            } else {
-                // Fallback to ffmpeg for MP4 and others
-                await new Promise((resolve, reject) => {
-                    ffmpeg.setFfmpegPath(ffmpegPath);
-                    ffmpeg(destPath)
-                        .outputOptions('-c', 'copy')  // Copy streams (no re-encoding)
-                        .outputOptions('-metadata', 'title=Downloaded from MUVIKA ZONE')
-                        .saveToFile(destPath)
-                        .on('end', resolve)
-                        .on('error', (err) => {
-                            console.error('FFmpeg Error:', err);
-                            reject(err);
-                        });
-                });
+        response.data.on('data', (chunk) => {
+            downloadedSize += chunk.length;
+            const now = Date.now();
+            if (now - lastLogTime >= 1000) {
+                const progress = ((downloadedSize / totalSize) * 100).toFixed(1);
+                const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(2);
+                const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+                socket.emit('result', `Downloaded: ${downloadedMB}MB of ${totalMB}MB (${progress}%)`);
+                lastLogTime = now;
             }
-            socket.emit('result', `Finished editing metadata. Uploading to telegram... ⏳`);
-            let telegram = await uploadingToTelegram(destPath, fileCaption, imgUrl, photCaption, socket)
-            socket.emit('result', `Finished uploading to Telegram. Saving to DB... ⏳`);
-            await fs.unlink(destPath)
-            resolve({telegram})
         });
-        writer.on('error', (err) => {
-            socket.emit('errorMessage', `Downlod failed`);
-            reject(new Error(`Failed writing the file: ${err.message}`));
+
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
         });
-    });
+
+        socket.emit('result', 'Download Finished. Generating metadata...');
+
+        const isMKV = path.extname(fileName).toLowerCase() === '.mkv';
+
+        if (isMKV) {
+            await execPromise(`mkvpropedit "${destPath}" --edit info --set "title=Downloaded from MUVIKA ZONE"`);
+            await execPromise(`mkvpropedit "${destPath}" --edit track:1 --set "name=Downloaded from MUVIKA ZONE"`);
+        } else {
+            await new Promise((resolve, reject) => {
+                ffmpeg(destPath)
+                    .outputOptions('-c', 'copy')
+                    .outputOptions('-metadata', 'title=Downloaded from MUVIKA ZONE')
+                    .saveToFile(`${destPath}.temp`)
+                    .on('end', async () => {
+                        await fs.rename(`${destPath}.temp`, destPath);
+                        resolve();
+                    })
+                    .on('error', reject);
+            });
+        }
+
+        socket.emit('result', 'Finished editing metadata. Uploading to telegram... ⏳');
+        
+        const telegram = await uploadingToTelegram(destPath, fileCaption, imgUrl, photCaption, socket);
+        
+        if (!telegram) {
+            throw new Error('Failed to get Telegram upload response');
+        }
+
+        socket.emit('result', 'Finished uploading to Telegram. Saving to DB... ⏳');
+        await fs.unlink(destPath);
+        
+        return { telegram };
+    } catch (error) {
+        socket.emit('errorMessage', `Download/upload process failed: ${error.message}`);
+        // Clean up the downloaded file if it exists
+        try {
+            await fs.access(destPath);
+            await fs.unlink(destPath);
+        } catch (cleanupError) {
+            // File doesn't exist or can't be accessed, ignore
+        }
+        throw error;
+    }
 };
 
 // Copying telegram
