@@ -135,20 +135,19 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
     try {
         let thumbPath = path.resolve(__dirname, '..', '..', 'public', 'essentials', `thumb-movie.jpeg`)
 
-        await bot.api.sendPhoto(Number(process.env.MUVIKA_TRAILERS), imgUrl, {
-            parse_mode: 'HTML',
-            caption: photCaption
-        })
-
         let tg_res = await bot.api.sendDocument(Number(process.env.OHMY_DB), new InputFile(destPath), {
             thumbnail: new InputFile(thumbPath),
             parse_mode: 'HTML',
             caption: fileCaption
         })
+        await bot.api.sendPhoto(Number(process.env.MUVIKA_TRAILERS), imgUrl, {
+            parse_mode: 'HTML',
+            caption: photCaption
+        })
         socket.emit('result', `✅ Finished uploading to Telegram`);
         return {msgid: tg_res.message_id, uniqueId: tg_res.document.file_unique_id, fileid: tg_res.document.file_id}
     } catch (error) {
-        console.error(error)
+        console.log(error.message, error)
         return socket.emit('errorMessage', `Failed uploading telegram... Error! ${error.message}`);
     }
 }
