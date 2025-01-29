@@ -139,10 +139,8 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
             thumbnail: new InputFile(thumbPath),
             parse_mode: 'HTML',
             caption: fileCaption
-        }).catch(e => {
-            console.log(e)
-            return;
         })
+        console.log(tg_res)
         await bot.api.sendPhoto(Number(process.env.MUVIKA_TRAILERS), imgUrl, {
             parse_mode: 'HTML',
             caption: photCaption
