@@ -253,6 +253,7 @@ const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, im
             await fs.unlink(destPath);
         } catch (cleanupError) {
             // File doesn't exist or can't be accessed, ignore
+            console.log('File cant be cleared. Not accessible')
         }
         throw error;
     }
