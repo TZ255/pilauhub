@@ -140,8 +140,6 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
             thumbnail: new InputFile(thumbPath),
             parse_mode: 'HTML',
             caption: fileCaption
-        }).then(f => {
-            console.log(f)
         })
         .catch(error => {
             console.error('Document upload error:', error);
