@@ -79,7 +79,7 @@ const getVideoMetadata = (videoPath) => {
             const videoStream = metadata.streams.find(stream => stream.codec_type === 'video');
             if (!videoStream) return reject(new Error('No video stream found'));
             resolve({
-                duration: metadata.format.duration,
+                duration: Math.floor(metadata.format.duration),
                 width: videoStream.width,
                 height: videoStream.height,
                 minutes: Math.floor(metadata.format.duration / 60),
@@ -88,6 +88,21 @@ const getVideoMetadata = (videoPath) => {
         });
     });
 };
+
+// Helper function to resize dimensions
+function resizeDimensions(width, height, maxSize = 320) {
+    if (width <= maxSize && height <= maxSize) {
+      return { width, height };
+    }
+  
+    const aspectRatio = width / height;
+  
+    if (width > height) {
+      return { width: maxSize, height: Math.round(maxSize / aspectRatio) };
+    } else {
+      return { width: Math.round(maxSize * aspectRatio), height: maxSize };
+    }
+  }
 
 // progress for uploading to Telegram
 function createUploadProgressStream(filePath, socket) {
@@ -133,6 +148,9 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption,
     try {
       // 1) Get the actual filename of the downloaded file
       const videoFilename = path.basename(videoPath);
+
+      //width and height
+      let {width, height} = resizeDimensions(metadata.width, metadata.height, 320)
   
       // 2) Create a read stream that reports progress for the main video.
       const videoStreamWithProgress = createUploadProgressStream(videoPath, socket);
@@ -150,8 +168,7 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption,
           caption,
           duration: metadata.duration,
           supports_streaming: true,
-          width: metadata.width,
-          height: metadata.height
+          width, height
         }
       );
   
