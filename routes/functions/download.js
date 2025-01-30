@@ -172,7 +172,7 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption,
                 width, height
             }
         ).finally(() => {
-            fs.unlink(filePath, (err) => {
+            fs.unlink(videoPath, (err) => {
                 if (err) console.error("Error deleting file:", err.message);
                 else console.log("Video File deleted successfully");
             });
