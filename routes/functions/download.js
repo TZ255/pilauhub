@@ -1,6 +1,6 @@
 const axios = require('axios').default;
-const fs = require('fs').promises;
-const standard_fs = require('fs');
+const fsPromise = require('fs').promises;
+const fs = require('fs');
 const { PassThrough } = require('stream');
 const path = require('path');
 const https = require('https');
@@ -32,7 +32,7 @@ const downloadFile = async (url, destPath, socket, type) => {
     let downloadedSize = 0;
     let lastLogTime = Date.now();
 
-    const writer = response.data.pipe(require('fs').createWriteStream(destPath));
+    const writer = response.data.pipe(fs.createWriteStream(destPath));
 
     response.data.on('data', (chunk) => {
         downloadedSize += chunk.length;
@@ -107,11 +107,11 @@ function resizeDimensions(width, height, maxSize = 320) {
 
 // progress for uploading to Telegram
 function createUploadProgressStream(filePath, socket) {
-    const totalSize = standard_fs.statSync(filePath).size
+    const totalSize = fs.statSync(filePath).size
     let uploadedSize = 0;
     let lastLogTime = Date.now();
   
-    const readStream = standard_fs.createReadStream(filePath);
+    const readStream = fs.createReadStream(filePath);
     const passThrough = new PassThrough();
   
     // Calculate bytes read and emit progress every ~1s
@@ -157,7 +157,7 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption,
       const videoStreamWithProgress = createUploadProgressStream(videoPath, socket);
   
       // 3) For the thumbnail, just a simple read stream (no need for progress)
-      const thumbStream = standard_fs.createReadStream(thumbPath);
+      const thumbStream = fs.createReadStream(thumbPath);
   
       // 4) Send the video with grammy using our custom streams.
       const vid = await bot.api.sendVideo(
@@ -226,8 +226,8 @@ const uploadVideoToServerAndTelegram = async ({
         const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption, socket);
 
         // Cleanup thumbnails and video
-        await fs.unlink(tgthumbPath);
-        await fs.unlink(videoPath)
+        await fsPromise.unlink(tgthumbPath);
+        await fsPromise.unlink(videoPath)
 
         socket.emit('result', `✅ Finish uploading ${type} to Telegram`);
 
