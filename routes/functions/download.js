@@ -1,5 +1,6 @@
 const axios = require('axios').default;
 const fs = require('fs').promises;
+const { PassThrough } = require('stream');
 const path = require('path');
 const https = require('https');
 const ffmpeg = require('fluent-ffmpeg');
@@ -88,19 +89,85 @@ const getVideoMetadata = (videoPath) => {
     });
 };
 
-// Helper function to upload video to Telegram
-const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption) => {
-    let vid = await bot.api.sendVideo(chatId, new InputFile(videoPath), {
-        thumbnail: new InputFile(thumbPath),
-        parse_mode: 'HTML',
-        caption,
-        duration: metadata.duration,
-        supports_streaming: true,
-        width: metadata.width,
-        height: metadata.height
+// progress for uploading to Telegram
+function createUploadProgressStream(filePath, socket) {
+    const totalSize = fs.statSync(filePath).size;
+    let uploadedSize = 0;
+    let lastLogTime = Date.now();
+  
+    const readStream = fs.createReadStream(filePath);
+    const passThrough = new PassThrough();
+  
+    // Calculate bytes read and emit progress every ~1s
+    readStream.on('data', (chunk) => {
+      uploadedSize += chunk.length;
+      const now = Date.now();
+      if (now - lastLogTime >= 1000) {
+        const progress = ((uploadedSize / totalSize) * 100).toFixed(1);
+        const uploadedMB = (uploadedSize / 1024 / 1024).toFixed(2);
+        const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+        socket.emit(
+          'result',
+          `Video Uploading: ${uploadedMB}MB of ${totalMB}MB (${progress}%)`
+        );
+        lastLogTime = now;
+      }
     });
-    return {msg_id: vid.message_id, tg_size: Math.floor(vid.video?.file_size / (1024 * 1024)), fileId: vid.video.file_id, uniqueId: vid.video.file_unique_id}
-};
+  
+    readStream.on('end', () => {
+      socket.emit('result', `Video upload stream ended (file fully read).`);
+    });
+  
+    readStream.on('error', (err) => {
+      socket.emit('result', `Error reading file for video upload: ${err.message}`);
+    });
+  
+    // Pipe the read stream into the passThrough, so we can still measure
+    readStream.pipe(passThrough);
+  
+    return passThrough;
+  }
+
+// Helper function to upload video to Telegram
+const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption, socket) => {
+    try {
+      // 1) Get the actual filename of the downloaded file
+      const videoFilename = path.basename(videoPath);
+  
+      // 2) Create a read stream that reports progress for the main video.
+      const videoStreamWithProgress = createUploadProgressStream(videoPath, socket);
+  
+      // 3) For the thumbnail, just a simple read stream (no need for progress)
+      const thumbStream = fs.createReadStream(thumbPath);
+  
+      // 4) Send the video with grammy using our custom streams.
+      const vid = await bot.api.sendVideo(
+        chatId,
+        new InputFile(videoStreamWithProgress, videoFilename), // pass the filename here
+        {
+          thumbnail: new InputFile(thumbStream),
+          parse_mode: 'HTML',
+          caption,
+          duration: metadata.duration,
+          supports_streaming: true,
+          width: metadata.width,
+          height: metadata.height
+        }
+      );
+  
+      socket.emit('result', `Video Upload Finished. Telegram message_id: ${vid.message_id}`);
+  
+      return {
+        msg_id: vid.message_id,
+        tg_size: Math.floor((vid.video?.file_size || 0) / (1024 * 1024)),
+        fileId: vid.video.file_id,
+        uniqueId: vid.video.file_unique_id
+      };
+    } catch (err) {
+      socket.emit('result', `Error uploading video to Telegram: ${err.message}`);
+      throw err;
+    }
+  };
 
 // Generic upload function
 const uploadVideoToServerAndTelegram = async ({ 
@@ -138,7 +205,7 @@ const uploadVideoToServerAndTelegram = async ({
         socket.emit('result', `Done. Starting Uploading ${type} to Telegram...`);
 
         // Upload to Telegram
-        const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption);
+        const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption, socket);
 
         // Cleanup thumbnails and video
         await fs.unlink(tgthumbPath);
@@ -156,7 +223,7 @@ const uploadVideoToServerAndTelegram = async ({
 
 // Specific function for uploading regular videos
 const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) => {
-    const videoPath = path.resolve(__dirname, '..', '..', 'storage', `${videoName}.mkv`)
+    const videoPath = path.resolve(__dirname, '..', '..', 'storage', `${videoName}.mp4`)
     const db_thumbpath = path.resolve(__dirname, '..', '..', 'private', 'thumbs', `${videoName}.jpg`)
     const tgthumbPath = path.resolve(__dirname, '..', '..', 'storage', `tele_${videoName}.jpeg`)
 
