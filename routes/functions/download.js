@@ -124,14 +124,14 @@ function createUploadProgressStream(filePath, socket) {
         const totalMB = (totalSize / 1024 / 1024).toFixed(2);
         socket.emit(
           'result',
-          `Video Uploading: ${uploadedMB}MB of ${totalMB}MB (${progress}%)`
+          `Upload Stream Reading: ${uploadedMB}MB of ${totalMB}MB (${progress}%)`
         );
         lastLogTime = now;
       }
     });
   
     readStream.on('end', () => {
-      socket.emit('result', `Video upload stream ended (file fully read).`);
+      socket.emit('result', `Stream ended (file fully read)... Finish uploading ⏳`);
     });
   
     readStream.on('error', (err) => {
@@ -171,7 +171,10 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption,
           supports_streaming: true,
           width, height
         }
-      );
+      ).finally(()=> {
+        fs.unlink(videoPath)
+        fs.unlink(thumbPath)
+      })
   
       socket.emit('result', `Video Upload Finished. Telegram message_id: ${vid.message_id}`);
   
@@ -224,10 +227,6 @@ const uploadVideoToServerAndTelegram = async ({
 
         // Upload to Telegram
         const tg_data = await uploadToTelegram(chatId, videoPath, tgthumbPath, metadata, caption, socket);
-
-        // Cleanup thumbnails and video
-        await fsPromise.unlink(tgthumbPath);
-        await fsPromise.unlink(videoPath)
 
         socket.emit('result', `✅ Finish uploading ${type} to Telegram`);
 
