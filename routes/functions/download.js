@@ -1,5 +1,6 @@
 const axios = require('axios').default;
 const fs = require('fs').promises;
+const standard_fs = require('fs');
 const { PassThrough } = require('stream');
 const path = require('path');
 const https = require('https');
@@ -106,11 +107,11 @@ function resizeDimensions(width, height, maxSize = 320) {
 
 // progress for uploading to Telegram
 function createUploadProgressStream(filePath, socket) {
-    const totalSize = fs.statSync(filePath).size;
+    const totalSize = standard_fs.statSync(filePath).size
     let uploadedSize = 0;
     let lastLogTime = Date.now();
   
-    const readStream = fs.createReadStream(filePath);
+    const readStream = standard_fs.createReadStream(filePath);
     const passThrough = new PassThrough();
   
     // Calculate bytes read and emit progress every ~1s
@@ -156,7 +157,7 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption,
       const videoStreamWithProgress = createUploadProgressStream(videoPath, socket);
   
       // 3) For the thumbnail, just a simple read stream (no need for progress)
-      const thumbStream = fs.createReadStream(thumbPath);
+      const thumbStream = standard_fs.createReadStream(thumbPath);
   
       // 4) Send the video with grammy using our custom streams.
       const vid = await bot.api.sendVideo(
