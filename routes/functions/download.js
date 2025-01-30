@@ -93,113 +93,119 @@ const getVideoMetadata = (videoPath) => {
 // Helper function to resize dimensions
 function resizeDimensions(width, height, maxSize = 320) {
     if (width <= maxSize && height <= maxSize) {
-      return { width, height };
+        return { width, height };
     }
-  
+
     const aspectRatio = width / height;
-  
+
     if (width > height) {
-      return { width: maxSize, height: Math.round(maxSize / aspectRatio) };
+        return { width: maxSize, height: Math.round(maxSize / aspectRatio) };
     } else {
-      return { width: Math.round(maxSize * aspectRatio), height: maxSize };
+        return { width: Math.round(maxSize * aspectRatio), height: maxSize };
     }
-  }
+}
 
 // progress for uploading to Telegram
 function createUploadProgressStream(filePath, socket) {
     const totalSize = fs.statSync(filePath).size
     let uploadedSize = 0;
     let lastLogTime = Date.now();
-  
+
     const readStream = fs.createReadStream(filePath);
     const passThrough = new PassThrough();
-  
+
     // Calculate bytes read and emit progress every ~1s
     readStream.on('data', (chunk) => {
-      uploadedSize += chunk.length;
-      const now = Date.now();
-      if (now - lastLogTime >= 1000) {
-        const progress = ((uploadedSize / totalSize) * 100).toFixed(1);
-        const uploadedMB = (uploadedSize / 1024 / 1024).toFixed(2);
-        const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-        socket.emit(
-          'result',
-          `Upload Stream Reading: ${uploadedMB}MB of ${totalMB}MB (${progress}%)`
-        );
-        lastLogTime = now;
-      }
+        uploadedSize += chunk.length;
+        const now = Date.now();
+        if (now - lastLogTime >= 1000) {
+            const progress = ((uploadedSize / totalSize) * 100).toFixed(1);
+            const uploadedMB = (uploadedSize / 1024 / 1024).toFixed(2);
+            const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+            socket.emit(
+                'result',
+                `Upload Stream Reading: ${uploadedMB}MB of ${totalMB}MB (${progress}%)`
+            );
+            lastLogTime = now;
+        }
     });
-  
+
     readStream.on('end', () => {
-      socket.emit('result', `Stream ended (file fully read)... Finish uploading ⏳`);
+        socket.emit('result', `Stream ended (file fully read)... Finish uploading ⏳`);
     });
-  
+
     readStream.on('error', (err) => {
-      socket.emit('result', `Error reading file for video upload: ${err.message}`);
+        socket.emit('result', `Error reading file for video upload: ${err.message}`);
     });
-  
+
     // Pipe the read stream into the passThrough, so we can still measure
     readStream.pipe(passThrough);
-  
+
     return passThrough;
-  }
+}
 
 // Helper function to upload video to Telegram
 const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption, socket) => {
     try {
-      // 1) Get the actual filename of the downloaded file
-      const videoFilename = path.basename(videoPath);
+        // 1) Get the actual filename of the downloaded file
+        const videoFilename = path.basename(videoPath);
 
-      //width and height
-      let {width, height} = resizeDimensions(metadata.width, metadata.height, 320)
-  
-      // 2) Create a read stream that reports progress for the main video.
-      const videoStreamWithProgress = createUploadProgressStream(videoPath, socket);
-  
-      // 3) For the thumbnail, just a simple read stream (no need for progress)
-      const thumbStream = fs.createReadStream(thumbPath);
-  
-      // 4) Send the video with grammy using our custom streams.
-      const vid = await bot.api.sendVideo(
-        chatId,
-        new InputFile(videoStreamWithProgress, videoFilename), // pass the filename here
-        {
-          thumbnail: new InputFile(thumbStream),
-          parse_mode: 'HTML',
-          caption,
-          duration: metadata.duration,
-          supports_streaming: true,
-          width, height
-        }
-      ).finally(()=> {
-        fs.unlink(videoPath)
-        fs.unlink(thumbPath)
-      })
-  
-      socket.emit('result', `Video Upload Finished. Telegram message_id: ${vid.message_id}`);
-  
-      return {
-        msg_id: vid.message_id,
-        tg_size: Math.floor((vid.video?.file_size || 0) / (1024 * 1024)),
-        fileId: vid.video.file_id,
-        uniqueId: vid.video.file_unique_id
-      };
+        //width and height
+        let { width, height } = resizeDimensions(metadata.width, metadata.height, 320)
+
+        // 2) Create a read stream that reports progress for the main video.
+        const videoStreamWithProgress = createUploadProgressStream(videoPath, socket);
+
+        // 3) For the thumbnail, just a simple read stream (no need for progress)
+        const thumbStream = fs.createReadStream(thumbPath);
+
+        // 4) Send the video with grammy using our custom streams.
+        const vid = await bot.api.sendVideo(
+            chatId,
+            new InputFile(videoStreamWithProgress, videoFilename), // pass the filename here
+            {
+                thumbnail: new InputFile(thumbStream),
+                parse_mode: 'HTML',
+                caption,
+                duration: metadata.duration,
+                supports_streaming: true,
+                width, height
+            }
+        ).finally(() => {
+            fs.unlink(filePath, (err) => {
+                if (err) console.error("Error deleting file:", err.message);
+                else console.log("File deleted successfully");
+            });
+            fs.unlink(thumbPath, (err) => {
+                if (err) console.error("Error deleting file:", err.message);
+                else console.log("File deleted successfully");
+            });
+        })
+
+        socket.emit('result', `Video Upload Finished. Telegram message_id: ${vid.message_id}`);
+
+        return {
+            msg_id: vid.message_id,
+            tg_size: Math.floor((vid.video?.file_size || 0) / (1024 * 1024)),
+            fileId: vid.video.file_id,
+            uniqueId: vid.video.file_unique_id
+        };
     } catch (err) {
-      socket.emit('result', `Error uploading video to Telegram: ${err.message}`);
-      throw err;
+        socket.emit('result', `Error uploading video to Telegram: ${err.message}`);
+        throw err;
     }
-  };
+};
 
 // Generic upload function
-const uploadVideoToServerAndTelegram = async ({ 
-    socket, 
-    url, 
+const uploadVideoToServerAndTelegram = async ({
+    socket,
+    url,
     chatId,
-    videoName, 
+    videoName,
     caption,
-    type, 
-    paths, 
-    thumbnailSize 
+    type,
+    paths,
+    thumbnailSize
 }) => {
     try {
         socket.emit('result', `${type} is starting downloading`);
@@ -215,7 +221,7 @@ const uploadVideoToServerAndTelegram = async ({
         await generateThumbnail(videoPath, tgthumbPath, '320x180');
 
         // Generate dbthumb if type do not include trailer
-        if(!type.toLowerCase().includes('trailer')) {
+        if (!type.toLowerCase().includes('trailer')) {
             const db_thumbpath = paths?.db_thumbpath
             await generateThumbnail(videoPath, db_thumbpath, thumbnailSize)
         }
@@ -231,7 +237,7 @@ const uploadVideoToServerAndTelegram = async ({
         socket.emit('result', `✅ Finish uploading ${type} to Telegram`);
 
         //get the metadata to be used on the trailer caption
-        return {metadata: metadata, telegram: tg_data}
+        return { metadata: metadata, telegram: tg_data }
     } catch (error) {
         socket.emit('errorMessage', error.message);
         console.error(`Error in uploading ${type}:`, error);
@@ -262,7 +268,7 @@ const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) 
     //backup the video
     let bckup = await bot.api.copyMessage(Number(process.env.BACKUP_CHANNEL), Number(process.env.OHMY_DB), uploaded.telegram.msg_id)
 
-    return {metadata: uploaded.metadata, telegram: {...uploaded.telegram, backup: bckup.message_id}}
+    return { metadata: uploaded.metadata, telegram: { ...uploaded.telegram, backup: bckup.message_id } }
 };
 
 
@@ -284,7 +290,7 @@ const uploadingTrailer = async (socket, durl, trailerName, typeVideo, trailerCap
         },
         thumbnailSize: '320x180'
     });
-    return {metadata: uploaded.metadata, telegram: uploaded.telegram}
+    return { metadata: uploaded.metadata, telegram: uploaded.telegram }
 };
 
 
@@ -296,7 +302,7 @@ const copyToPilauHub = async (hubID, trailerID, msg_id, downloadUrl, socket) => 
             reply_markup: {
                 inline_keyboard: [
                     [
-                        {text: '📥 DOWNLOAD FULL VIDEO', url: downloadUrl}
+                        { text: '📥 DOWNLOAD FULL VIDEO', url: downloadUrl }
                     ]
                 ]
             }
