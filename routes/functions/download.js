@@ -32,7 +32,7 @@ const downloadFile = async (url, destPath, socket, type) => {
     let downloadedSize = 0;
     let lastLogTime = Date.now();
 
-    const writer = response.data.pipe(fs.createWriteStream(destPath));
+    const writer = response.data.pipe(fs.createWriteStream(destPath, {highWaterMark: 32*1024}));
 
     response.data.on('data', (chunk) => {
         downloadedSize += chunk.length;
@@ -111,7 +111,7 @@ function createUploadProgressStream(filePath, socket) {
     let uploadedSize = 0;
     let lastLogTime = Date.now();
 
-    const readStream = fs.createReadStream(filePath);
+    const readStream = fs.createReadStream(filePath, {highWaterMark: 32*1024}) //32kb;
     const passThrough = new PassThrough();
 
     // Calculate bytes read and emit progress every ~1s
