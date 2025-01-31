@@ -32,7 +32,7 @@ const downloadFile = async (url, destPath, socket, type) => {
     let downloadedSize = 0;
     let lastLogTime = Date.now();
 
-    const writer = response.data.pipe(fs.createWriteStream(destPath, {highWaterMark: 32*1024}));
+    const writer = response.data.pipe(fs.createWriteStream(destPath));
 
     response.data.on('data', (chunk) => {
         downloadedSize += chunk.length;
