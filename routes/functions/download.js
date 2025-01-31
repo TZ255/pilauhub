@@ -111,7 +111,7 @@ function createUploadProgressStream(filePath, socket) {
     let uploadedSize = 0;
     let lastLogTime = Date.now();
 
-    const readStream = fs.createReadStream(filePath, {highWaterMark: 32*1024}) //32kb;
+    const readStream = fs.createReadStream(filePath, {highWaterMark: 16*1024}) //16kb;
     const passThrough = new PassThrough();
 
     // Calculate bytes read and emit progress every ~1s
