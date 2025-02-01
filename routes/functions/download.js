@@ -293,6 +293,19 @@ const uploadingTrailer = async (socket, durl, trailerName, typeVideo, trailerCap
     return { metadata: uploaded.metadata, telegram: uploaded.telegram }
 };
 
+//Upload photo trailer
+const uploadPhotoTrailer = async (photoUrl, socket, caption) => {
+    try {
+        let resPhoto = await bot.api.sendPhoto(Number(process.env.REPLY_DB), photoUrl, {
+            parse_mode: 'HTML',
+            caption
+        })
+        return {telegram: {msg_id: resPhoto.message_id}}
+    } catch (error) {
+        socket.emit('errorMessage', error.message)
+        throw error
+    }
+}
 
 // TG Forwarding
 // sendToPilauHub
@@ -316,5 +329,6 @@ const copyToPilauHub = async (hubID, trailerID, msg_id, downloadUrl, socket) => 
 module.exports = {
     uploadingTrailer,
     uploadingVideos,
-    copyToPilauHub
+    copyToPilauHub,
+    uploadPhotoTrailer
 };

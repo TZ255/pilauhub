@@ -1,5 +1,5 @@
 const otpGen = require('otp-generator')
-const { uploadingTrailer, uploadingVideos, copyToPilauHub } = require("../functions/download");
+const { uploadingTrailer, uploadingVideos, copyToPilauHub, uploadPhotoTrailer } = require("../functions/download");
 const tgTrailerModel = require('../../models/gif');
 const tgVideoModel = require('../../models/tgVidDb');
 const videoModel = require('../../models/video');
@@ -24,9 +24,15 @@ const videoDataSocket = (socket) => {
             const fullVideo = await uploadingVideos(socket, video, fname, 'Full Video', fileCaption)
 
             //uploading trailer
+            const vidTrailer = null
             const trailer_caption = `<blockquote><b>#Trailer (${date}) ${brand}</b></blockquote>\n\n<b>🎥 Title:</b> ${caption}\n<b>👥 Cast:</b> ${cast}\n\n<blockquote><b>📁 Size:</b> ${fullVideo.telegram.tg_size} MB | 🕝 ${fullVideo.metadata.minutes} minutes</blockquote>\n<b>Get Full Video 👇👇</b>`
 
-            const vidTrailer = await uploadingTrailer(socket, trailer, fname, "Trailer", trailer_caption)
+            //check if trailer is photo
+            if (['.jpg', '.jpeg', '.webp'].some(ext => String(trailer).endsWith(ext))) {
+                vidTrailer = await uploadPhotoTrailer(trailer, socket, trailer_caption)
+            } else {
+                vidTrailer = await uploadingTrailer(socket, trailer, fname, "Trailer", trailer_caption)
+            }
 
             //emit success msg
             socket.emit('result', `Finished Uploading ${fname}. Saving to db...`)
