@@ -47,12 +47,12 @@ app.use(
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
       collectionName: 'sessions',
-      // ttl (time-to-live) in seconds: 30 minutes = 1800 seconds
-      ttl: 60 * 30,
+      // ttl (time-to-live) in seconds: 1 week
+      ttl: 60 * 60 * 24 * 7,
       autoRemove: 'native', // Remove expired sessions automatically
     }),
     cookie: {
-      maxAge: 1000 * 60 * 30, // 30 minutes in milliseconds
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week (in miliseconds)
     },
     rolling: true //the session expiration will reset in every user interaction
   })
