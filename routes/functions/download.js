@@ -165,6 +165,7 @@ const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption,
             new InputFile(videoStreamWithProgress, videoFilename), // pass the filename here
             {
                 thumbnail: new InputFile(thumbStream),
+                cover: new InputFile(thumbStream),
                 parse_mode: 'HTML',
                 caption,
                 duration: metadata.duration,
