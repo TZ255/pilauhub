@@ -12,9 +12,6 @@ const { promisify } = require('util');
 // Promisify exec for better async/await handling
 const execPromise = promisify(exec);
 
-// Set ffmpeg path
-ffmpeg.setFfmpegPath(ffmpeg);
-
 // Initialize Telegram Bot
 const bot = new Bot(process.env.BOT_TOKEN, {
     client: { apiRoot: process.env.API_ROOT }
