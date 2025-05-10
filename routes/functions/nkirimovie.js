@@ -5,16 +5,12 @@ const https = require('https')
 const fs = require('fs').promises;
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
 const { Bot, InputFile } = require('grammy');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 
 // Promisify exec for better async/await handling
 const execPromise = promisify(exec);
-
-// Set ffmpeg path
-ffmpeg.setFfmpegPath(ffmpegPath);
 
 // Initialize Telegram Bot
 const bot = new Bot(process.env.BOT_TOKEN, {
