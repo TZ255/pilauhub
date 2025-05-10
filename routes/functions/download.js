@@ -5,7 +5,6 @@ const { PassThrough } = require('stream');
 const path = require('path');
 const https = require('https');
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
 const { Bot, InputFile } = require('grammy');
 const { exec } = require('child_process');
 const { promisify } = require('util');
@@ -14,7 +13,7 @@ const { promisify } = require('util');
 const execPromise = promisify(exec);
 
 // Set ffmpeg path
-ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfmpegPath(ffmpeg);
 
 // Initialize Telegram Bot
 const bot = new Bot(process.env.BOT_TOKEN, {
