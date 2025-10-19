@@ -25,7 +25,7 @@ const videoDataSocket = (socket) => {
 
             //uploading trailer
             let vidTrailer = null
-            const trailer_caption = `<blockquote><b>#Trailer (${date}) ${brand}</b></blockquote>\n\n<b>🎥 Title:</b> ${caption}\n<b>👥 Cast:</b> ${cast}\n\n<blockquote><b>📁 Size:</b> ${fullVideo.telegram.tg_size} MB | 🕝 ${fullVideo.metadata.minutes} minutes</blockquote>\n<b>Get Full Video 👇👇</b>`
+            const trailer_caption = `<blockquote><b>📅 ${date} | ${brand}</b></blockquote>\n\n<b>🎥 Title:</b> ${caption}\n<b>👥 Cast:</b> ${cast}\n\n<blockquote><b>📁 Size:</b> ${fullVideo.telegram.tg_size} MB | 🕝 ${fullVideo.metadata.minutes} minutes</blockquote>\n<b>Get Full Video 👇👇</b>`
 
             //check if trailer is photo
             if (['.jpg', '.jpeg', '.webp'].some(ext => String(trailer).endsWith(ext))) {
