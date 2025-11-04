@@ -52,7 +52,7 @@ async function scrapeNkiriPage(url, socket) {
 
         // Extract the <title> tag content
         const title = $('title').text().trim(); //DOWNLOAD Venom: The Last Dance (2024) | Download Hollywood Movie
-        const movieName = title.split('|')[0].replace('DOWNLOAD ', '').trim();
+        const movieName = title.split('|')[0].replace('DOWNLOAD ', '').replace('THENKIRI ', '').replace('THE NKIRI ', '').replace('NKIRI ', '').trim();
 
         // Return the scraped data
         return { ogImage, downloadLink, synopsisText, movieName };
