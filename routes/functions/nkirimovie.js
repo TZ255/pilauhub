@@ -94,7 +94,13 @@ const reqEpisodeAxios = async (Origin, referer, formData) => {
             return status >= 200 && status < 400;  // Resolve only if the status code is less than 400
         }
     });
-    return response.headers.location
+
+    const final_download_page = response.data
+
+    let $ = cheerio.load(final_download_page)
+    let ddl = $('a:has(.downloadbtn)[href$=".mkv"], a:has(.downloadbtn)[href$=".mp4"]').attr("href");
+    return ddl
+    
 }
 
 async function GetDirectDownloadLink(url, socket) {
