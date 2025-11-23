@@ -52,7 +52,7 @@ async function scrapeNkiriPage(url, socket) {
 
         // Extract the <title> tag content
         const title = $('title').text().trim(); //DOWNLOAD Venom: The Last Dance (2024) | Download Hollywood Movie
-        const movieName = title.split('|')[0].replace('DOWNLOAD ', '').trim();
+        const movieName = title.split('|')[0].replace('DOWNLOAD ', '').replace('THENKIRI ', '').replace('THE NKIRI ', '').replace('NKIRI ', '').trim();
 
         // Return the scraped data
         return { ogImage, downloadLink, synopsisText, movieName };
@@ -94,7 +94,13 @@ const reqEpisodeAxios = async (Origin, referer, formData) => {
             return status >= 200 && status < 400;  // Resolve only if the status code is less than 400
         }
     });
-    return response.headers.location
+
+    const final_download_page = response.data
+
+    let $ = cheerio.load(final_download_page)
+    let ddl = $('a:has(.downloadbtn)[href$=".mkv"], a:has(.downloadbtn)[href$=".mp4"]').attr("href");
+    return ddl
+    
 }
 
 async function GetDirectDownloadLink(url, socket) {
