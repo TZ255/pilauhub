@@ -6,7 +6,7 @@ const videoModel = require('../models/video');
 
 router.get('/', isAuth, async (req, res) => {
     try {
-        const videos = await videoModel.find().sort('-createdAt').limit(10)
+        const videos = await videoModel.find().sort('-createdAt').limit(20)
         res.render('dashboard/dashboard', { user: req.user, videos })
     } catch (error) {
         res.send('Samahani! Kumetokea changamoto ya kimtandao')
