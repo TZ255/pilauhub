@@ -102,7 +102,7 @@ const reqEpisodeAxios = async (Origin, referer, formData) => {
     // let $ = cheerio.load(final_download_page)
     // let ddl = $('a:has(.downloadbtn)[href$=".mkv"], a:has(.downloadbtn)[href$=".mp4"]').attr("href");
     // return ddl
-    
+
 }
 
 async function GetDirectDownloadLink(url, socket) {
@@ -137,7 +137,10 @@ async function GetDirectDownloadLink(url, socket) {
 
 const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, socket) => {
     try {
-        let thumbPath = path.resolve(__dirname, '..', '..', 'public', 'essentials', 'thumb-movie.jpeg');
+        const dir = path.resolve(__dirname, '..', '..', 'public', 'essentials');
+        fs.mkdirSync(dir, { recursive: true }); // ensures folder exists
+
+        const thumbPath = path.resolve(dir, 'thumb-movie.jpeg');
 
         // First attempt to send the document
         const documentResult = await bot.api.sendDocument(Number(process.env.OHMY_DB), new InputFile(destPath), {
@@ -145,10 +148,10 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
             parse_mode: 'HTML',
             caption: fileCaption
         })
-        .catch(error => {
-            console.error('Document upload error:', error);
-            throw new Error(`Failed to upload document: ${error.message}`);
-        });
+            .catch(error => {
+                console.error('Document upload error:', error);
+                throw new Error(`Failed to upload document: ${error.message}`);
+            });
 
         if (!documentResult) {
             throw new Error('Document upload failed - no response received');
@@ -180,7 +183,7 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
 // Helper function to download a file with progress tracking
 const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, imgUrl) => {
     const destPath = path.resolve(__dirname, '..', '..', 'storage', fileName);
-    
+
     try {
         const response = await axios.get(durl, {
             responseType: 'stream',
@@ -238,16 +241,16 @@ const downloadFile = async (durl, socket, fileName, fileCaption, photCaption, im
         }
 
         socket.emit('result', 'Finished editing metadata. Uploading to telegram... ⏳');
-        
+
         const telegram = await uploadingToTelegram(destPath, fileCaption, imgUrl, photCaption, socket);
-        
+
         if (!telegram) {
             throw new Error('Failed to get Telegram upload response');
         }
 
         socket.emit('result', 'Finished uploading to Telegram. Saving to DB... ⏳');
         await fs.unlink(destPath);
-        
+
         return { telegram };
     } catch (error) {
         socket.emit('errorMessage', `Download/upload process failed: ${error.message}`);

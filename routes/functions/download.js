@@ -107,7 +107,7 @@ function createUploadProgressStream(filePath, socket) {
     let uploadedSize = 0;
     let lastLogTime = Date.now();
 
-    const readStream = fs.createReadStream(filePath, {highWaterMark: 32*1024}) //32kb;
+    const readStream = fs.createReadStream(filePath, { highWaterMark: 32 * 1024 }) //32kb;
     const passThrough = new PassThrough();
 
     // Calculate bytes read and emit progress every ~1s
@@ -243,10 +243,16 @@ const uploadVideoToServerAndTelegram = async ({
 
 // Specific function for uploading regular videos
 const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) => {
-    const videoPath = path.resolve(__dirname, '..', '..', 'storage', `${videoName}.mp4`)
-    const db_thumbpath = path.resolve(__dirname, '..', '..', 'private', 'thumbs', `${videoName}.jpg`)
-    const tgthumbPath = path.resolve(__dirname, '..', '..', 'storage', `tele_${videoName}.jpeg`)
+    const storageDir = path.resolve(__dirname, '..', '..', 'storage');
+    const privateThumbDir = path.resolve(__dirname, '..', '..', 'private', 'thumbs');
 
+    //nsure folder exists
+    fs.mkdirSync(storageDir, { recursive: true });
+    fs.mkdirSync(privateThumbDir, { recursive: true });
+
+    const videoPath = path.resolve(storageDir, `${videoName}.mp4`)
+    const db_thumbpath = path.resolve(privateThumbDir, `${videoName}.jpg`)
+    const tgthumbPath = path.resolve(storageDir, `tele_${videoName}.jpeg`)
     const uploaded = await uploadVideoToServerAndTelegram({
         socket,
         url: durl,
@@ -271,8 +277,11 @@ const uploadingVideos = async (socket, durl, videoName, typeVideo, fileCaption) 
 
 // Specific function for uploading trailers (start with full video then trailer to get full video metadata)
 const uploadingTrailer = async (socket, durl, trailerName, typeVideo, trailerCaption) => {
-    const trailerPath = path.resolve(__dirname, '..', '..', 'private', 'trailers', `${trailerName}.mkv`);
-    const tgthumbPath = path.resolve(__dirname, '..', '..', 'private', 'trailers', `tg_${trailerName}.jpeg`);
+    const trailerDir = path.resolve(__dirname, '..', '..', 'private', 'trailers');
+    fs.mkdirSync(trailerDir, { recursive: true }); // ensures folder exists
+
+    const trailerPath = path.resolve(trailerDir, `${trailerName}.mkv`);
+    const tgthumbPath = path.resolve(trailerDir, `tg_${trailerName}.jpeg`);
 
     let uploaded = await uploadVideoToServerAndTelegram({
         socket,
@@ -297,7 +306,7 @@ const uploadPhotoTrailer = async (photoUrl, socket, caption) => {
             parse_mode: 'HTML',
             caption
         })
-        return {telegram: {msg_id: resPhoto.message_id}}
+        return { telegram: { msg_id: resPhoto.message_id } }
     } catch (error) {
         socket.emit('errorMessage', error.message)
         throw error
@@ -311,7 +320,7 @@ const uploadAnimationTrailer = async (animationUrl, socket, caption) => {
             parse_mode: 'HTML',
             caption
         })
-        return {telegram: {msg_id: resAnimation.message_id}}
+        return { telegram: { msg_id: resAnimation.message_id } }
     } catch (error) {
         socket.emit('errorMessage', error.message)
         throw error
