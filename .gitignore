@@ -1,5 +1,7 @@
 node_modules/
 .env
-# public/
-# private/
-# storage/
+
+storage/*
+private/*
+public/*
+!.gitkeep
