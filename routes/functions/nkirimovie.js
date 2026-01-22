@@ -108,7 +108,7 @@ const uploadingToTelegram = async (destPath, fileCaption, imgUrl, photCaption, s
         const thumbPath = path.resolve(dir, 'thumb-movie.jpeg');
 
         const documentResult = await bot.api.sendDocument(Number(process.env.OHMY_DB), new InputFile(destPath), {
-            thumbnail: new InputFile(thumbPath),
+            thumbnail: new InputFile("https://res.cloudinary.com/daucejhsa/image/upload/v1769078594/thumb-movie_qfxwvt.jpg"),
             parse_mode: 'HTML',
             caption: fileCaption
         }).catch(error => {
