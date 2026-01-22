@@ -1,8 +1,5 @@
 node_modules/
 .env
-ecosystem.config.js
-public/
-private/
-storage/
-package.json
-package-lock.json
+# public/
+# private/
+# storage/
