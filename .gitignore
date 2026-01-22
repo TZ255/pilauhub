@@ -1,8 +1,14 @@
+# Node stuff
 node_modules/
 .env
 
-#  Ignore storage and private/public folders, but keep .gitkeep files
+# Ignore everything in storage, private, and public
 storage/*
 private/*
 public/*
-!.gitkeep
+
+# But keep all .gitkeep files
+*.gitkeep
+
+# Also keep the specific thumb image
+!public/essentials/thumb-movie.jpeg
