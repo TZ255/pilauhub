@@ -1,6 +1,7 @@
 node_modules/
 .env
 
+#  Ignore storage and private/public folders, but keep .gitkeep files
 storage/*
 private/*
 public/*
