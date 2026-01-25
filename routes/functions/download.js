@@ -99,53 +99,36 @@ function resizeDimensions(width, height, maxSize = 320) {
     return { width: Math.round(maxSize * ratio), height: maxSize };
 }
 
-// Upload progress stream
-function createUploadProgressStream(filePath, socket) {
-    const totalSize = fsSync.statSync(filePath).size;
-    let uploadedSize = 0;
-    let lastLogTime = Date.now();
-
-    const readStream = fsSync.createReadStream(filePath, { highWaterMark: 32 * 1024 });
-    const passThrough = new PassThrough();
-
-    readStream.on('data', (chunk) => {
-        uploadedSize += chunk.length;
-        const now = Date.now();
-        if (now - lastLogTime >= 1000) {
-            const progress = ((uploadedSize / totalSize) * 100).toFixed(1);
-            const uploadedMB = (uploadedSize / 1024 / 1024).toFixed(2);
-            const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-            socket.emit('result', `Upload Stream Reading: ${uploadedMB}MB of ${totalMB}MB (${progress}%)`);
-            lastLogTime = now;
-        }
-    });
-
-    readStream.on('end', () => socket.emit('result', `Stream ended (file fully read)... Finish uploading ⏳`));
-    readStream.on('error', (err) => socket.emit('result', `Error reading file for upload: ${err.message}`));
-
-    readStream.pipe(passThrough);
-    return passThrough;
-}
-
 // Upload to Telegram
 const uploadToTelegram = async (chatId, videoPath, thumbPath, metadata, caption, socket) => {
     const { width, height } = resizeDimensions(metadata.width, metadata.height, 320);
-    const videoStream = createUploadProgressStream(videoPath, socket);
-
-    await ensureFolderExists(path.dirname(thumbPath));
-    const thumbStream = fsSync.createReadStream(thumbPath);
 
     const vid = await bot.api.sendVideo(
         chatId,
-        new InputFile(videoStream, path.basename(videoPath)),
-        { thumbnail: new InputFile(thumbStream), cover: new InputFile(thumbStream), parse_mode: 'HTML', caption, duration: metadata.duration, supports_streaming: true, width, height }
-    ).finally(() => {
-        fsSync.unlink(videoPath, () => {});
-        fsSync.unlink(thumbPath, () => {});
-    });
+        new InputFile(videoPath),
+        {
+            thumbnail: new InputFile(fsSync.createReadStream(thumbPath)),
+            parse_mode: 'HTML',
+            caption,
+            duration: metadata.duration,
+            supports_streaming: true,
+            width,
+            height
+        }
+    );
+
+    // delete only AFTER success
+    await fs.unlink(videoPath).catch(() => { });
+    await fs.unlink(thumbPath).catch(() => { });
 
     socket.emit('result', `Video Upload Finished. Telegram message_id: ${vid.message_id}`);
-    return { msg_id: vid.message_id, tg_size: Math.floor((vid.video?.file_size || 0)/(1024*1024)), fileId: vid.video.file_id, uniqueId: vid.video.file_unique_id };
+
+    return {
+        msg_id: vid.message_id,
+        tg_size: Math.floor((vid.video?.file_size || 0) / (1024 * 1024)),
+        fileId: vid.video.file_id,
+        uniqueId: vid.video.file_unique_id
+    };
 };
 
 // Generic upload
@@ -220,13 +203,13 @@ const uploadingTrailer = async (socket, durl, trailerName, typeVideo, trailerCap
 
 // Upload photo trailer
 const uploadPhotoTrailer = async (photoUrl, socket, caption) => {
-    try { const res = await bot.api.sendPhoto(Number(process.env.REPLY_DB), photoUrl, { parse_mode:'HTML', caption }); return { telegram: { msg_id: res.message_id } } }
+    try { const res = await bot.api.sendPhoto(Number(process.env.REPLY_DB), photoUrl, { parse_mode: 'HTML', caption }); return { telegram: { msg_id: res.message_id } } }
     catch (err) { socket.emit('errorMessage', err.message); throw err; }
 };
 
 // Upload animation trailer
 const uploadAnimationTrailer = async (animationUrl, socket, caption) => {
-    try { const res = await bot.api.sendAnimation(Number(process.env.REPLY_DB), animationUrl, { parse_mode:'HTML', caption }); return { telegram: { msg_id: res.message_id } } }
+    try { const res = await bot.api.sendAnimation(Number(process.env.REPLY_DB), animationUrl, { parse_mode: 'HTML', caption }); return { telegram: { msg_id: res.message_id } } }
     catch (err) { socket.emit('errorMessage', err.message); throw err; }
 };
 
