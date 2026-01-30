@@ -70,7 +70,15 @@ const reqEpisodeAxios = async (Origin, referer, formData) => {
         validateStatus: status => status >= 200 && status < 400
     });
 
-    return response.headers.location || response.headers['location'];
+    // old way to get direct link
+    //return response.headers.location || response.headers['location'];
+
+    // new way to get direct link
+    const final_download_page = response.data
+
+    let $ = cheerio.load(final_download_page)
+    let ddl = $('a:has(.downloadbtn)[href$=".mkv"], a:has(.downloadbtn)[href$=".mp4"]').attr("href");
+    return ddl;
 };
 
 async function GetDirectDownloadLink(url, socket) {
